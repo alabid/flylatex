@@ -32,9 +32,7 @@ app.configure('production', function(){
 
 app.get('/', routes.index);
 
-app.get('/', function(req, res) {
-	res.send("Hello World");
-    });
+app.get('/secondindex', routes.secondindex);
 
 app.listen((process.env.PORT || 3000), function(){
   console.log("Express server listening on port %d in %s mode", app.address().port, app.settings.env);
