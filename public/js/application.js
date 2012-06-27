@@ -75,6 +75,7 @@ function DocsManager() {
      * docName -> name of the document to create
      */
     this.createDoc = function(docName) {
+	
 	// send ajax request to create a new document for the
 	// current user
 	
