@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title><%= title %></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- Le styles -->
+    <link href="/css/bootstrap.css" rel="stylesheet"/>
+    <link href="/css/bootstrap-responsive.css" rel="stylesheet"/>
+
+    <!-- style.css - css for all fly latex pages -->
+    <link href="/css/style.css" rel="stylesheet"/>
+    
+    <% if (typeof fileSpecificStyle != "undefined") { %>
+    <link href="/css/<%= fileSpecificStyle %>" rel="stylesheet"/>
+    <% } %>
+    <style>
+      body {
+        padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+      }
+    </style>
+
+    <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <!-- load scripts here -->
+    <script type="text/javascript" src="/js/jquery.min.js"></script>
+    <script type="text/javascript" src="/js/bootstrap.js"></script>
+    <script type="text/javascript" src="/js/handlebars.js"></script>
+
+    <script type="text/javascript" src="/js/application.js"></script>
+    <% if (typeof fileSpecificScript != "undefined") { %>
+    <script type="text/javascript" src="/js/<%= fileSpecificScript %>"></script>
+    <% } %>
+  </head>
+
+  <body>
+    <!-- import our defined handle bars templates here -->
+    <%- partial("application-templates.ejs") %>
+
+
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </a>
+          <a class="brand" href="/"><%= shortTitle %></a>
+          <div class="nav-collapse">
+            <ul class="nav">
+              <li class="active"><a href="/">Home</a></li>
+              <li><a target="_blank" href="http://github.com/alabid/fly-latex">About</a></li>
+              <li><a target="_blank" href="http://github.com/alabid/fly-latex">Contact</a></li>
+            </ul>
+          </div><!--/.nav-collapse -->
+	  
+	  <% if (typeof currentUser != "undefined" && typeof isLoggedIn != "undefined") { %>
+	    <% if (currentUser && isLoggedIn) { %>
+	    <div class="welcome-message pull-right">
+	      <strong>Welcome, </strong><%= currentUser %><a href="javascript:user_manager.logout();"> Logout</a>
+	    </div>
+	    <% } %>
+	  <% } else { %>
+	  <form action="/" class="pull-right" method="post">
+	    <input name="username" class="input-small" type="text" placeholder="Username"/>
+	    <input name="password" class="input-small" type="password" placeholder="Password"/>
+	    <button class="btn" type="submit">Sign In</button>
+	  </form>
+	  <button onclick="document.location.href='/signup'" class="sign-up btn btn-success pull-right" type="submit">Sign Up</button>
+	  <% } %>
+        </div><!-- /container -->
+      </div>
+    </div>
+
+    <div class="container">
+      <!-- display single info message here -->
+      <% if (typeof info.length !== "undefined" && info != "")  { %>
+      <div class="alert alert-info">
+	<button class="close" data-dismiss="alert">x</button>
+	<%= info %>
+      </div>
+      <% } %>
+      <!-- end of display of single info message here -->
+      
+      <!-- display single error message here -->
+      <% console.log(error); %>
+      <% if (typeof error.length !== "undefined" && error != "")  { %>
+      <div class="alert alert-error">
+	<button class="close" data-dismiss="alert">x</button>
+	<%= error %>
+      </div>
+      <% } %>	
+      <!-- end of display of single error message here -->
+      
+      <!-- display info messages here -->
+      <% if (typeof infos === "object") { %>
+      <div class="alert alert-info">
+	<button class="close" data-dismiss="alert">x</button>
+	<ul>
+	<% for (key in infos) { %>
+	  <li><b><%= key %></b> : <%= infos[key] %></li>
+	<% } %>
+	</ul>
+      </div>
+      <% } %>
+      <!-- end of display of info messages here -->
+      
+      <!-- display error messages here -->
+      <% if (typeof errors === "object") { %>
+      <div class="alert alert-error">
+	<button class="close" data-dismiss="alert">x</button>
+	<ul>
+	<% for (key in errors) { %>
+	  <li><b><%= key %></b> : <%= errors[key] %></li>
+	<% } %>
+	</ul>
+      </div>
+      <% } %>
+      <!-- end of display of error messages -->
+      
+      <div class="content">
+	<div class="page-header">
+	  <h1><%= shortTitle %>
+	    <% if (typeof tagLine != "undefined") { %>
+	    <small> <%= tagLine %></small>
+	    <% } %>
+	  </h1>
+	</div>
+	<%- body %>
+      </div><!-- /content -->
+      <footer>
+	<p><a target="_blank" href="http://github.com/alabid/fly-latex">Fork our code on github</a>&nbsp;&copy; 2012</p>
+      </footer>
+    </div> <!-- /container -->
+  </body>
+</html>

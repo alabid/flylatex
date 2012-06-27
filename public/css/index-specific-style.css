@@ -47,3 +47,8 @@ body {
 .topbar .btn {
     border: 0;
 }
+
+form {
+    margin-bottom: 0;
+    padding-bottom: 0;
+}

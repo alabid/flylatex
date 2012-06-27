@@ -1,0 +1,54 @@
+<div class="sign-up-form">
+  <h2><%= title %></h2>
+  <div class="span8">
+    <form action="/signup" method="post" class="form-horizontal">
+      <fieldset>
+	<div class="control-group">
+	  <label class="control-label" for="focusedInput">Username* </label>
+	  <div class="controls">
+	    <input class="input-xlarge focused" id="focusedInput" type="text" name="newUser[userName]" placeholder="Enter UserName here"/>
+	  </div>
+	</div>
+	<div class="control-group">
+	  <label class="control-label" for="focusedInput">Password* </label>
+	  <div class="controls">
+	    <input class="input-xlarge focused" id="focusedInput" type="text" name="newUser[password]" placeholder="Enter Password here"/>
+	  </div>
+	</div>
+	<div class="control-group">
+	  <label class="control-label" for="focusedInput">Email* </label>
+	  <div class="controls">
+	    <input name="newUser[email]" class="input-xlarge focused" id="focusedInput" type="text" placeholder="Enter Email here"/>
+	  </div>
+	</div>
+	<div class="control-group">
+	  <label class="control-label" for="focusedInput">First Name* </label>
+	  <div class="controls">
+	    <input name="newUser[firstName]" class="input-xlarge focused" id="focusedInput" type="text" placeholder="Enter First Name here"/>
+	  </div>
+	</div>
+	<div class="control-group">
+	  <label class="control-label" for="focusedInput">Last Name* </label>
+	  <div class="controls">
+	    <input name="newUser[lastName]" class="input-xlarge focused" id="focusedInput" type="text" placeholder="Enter Last Name here"/>
+	  </div>
+	</div>
+	<div class="control-group">
+	  <label class="control-label" for="focusedInput">GitHub Id </label>
+	  <div class="controls">
+	    <input name="newUser[githubId]" class="input-xlarge focused" id="focusedInput" type="text" placeholder="Enter Github Id here"/>
+	  </div>
+	</div>
+	<div class="control-group">
+	  <label class="control-label" for="focusedInput">Twitter Id </label>
+	  <div class="controls">
+	    <input name="newUser[twitterId]" class="input-xlarge focused" id="focusedInput" type="text" placeholder="Enter Twitter Id here"/>
+	  </div>
+	</div>
+	<div class="form-actions">
+	  <button type="submit" class="btn btn-primary">Sign Up</button>
+	</div>
+      </fieldset>
+    </form>
+  </div>
+</div>

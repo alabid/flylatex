@@ -1,0 +1,27 @@
+div.message-log-in {
+    margin: 30px;
+    height: 400px;
+}
+
+div.message-log-in ul{
+    list-style-type: none;
+}
+
+div.message-log-in ul li {
+    line-height: 30px;
+    font-size: 16px;
+}
+
+footer {
+    border-top-style: solid;
+    border-top-width: 2px;
+    border-top-color: black;
+    padding-top: 50px;
+    margin-left: auto;
+    margin-right: auto;
+    clear:both;
+}
+
+footer p {
+    text-align: center;
+}

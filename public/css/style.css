@@ -1,0 +1,45 @@
+form {
+    margin-bottom: 0;
+}
+
+form.pull-right {
+    margin-left: 40px;
+}
+
+.welcome-message {
+    margin-top: 10px;
+}
+
+footer {
+    border-top-style: solid;
+    border-top-width: 2px;
+    border-top-color: black;
+    padding-top: 50px;
+    margin-left: auto;
+    margin-right: auto;
+    clear:both;
+}
+
+footer p {
+    text-align: center;
+}
+
+div.documents-section {
+    height: 500px;
+    border-left-color: blue;
+    border-left-style: solid;
+    border-left-width: 2px;
+    padding: 30px;
+    padding-top: 0;
+    margin-bottom: 30px;
+}
+
+div#doc-area textarea {
+    width: 500px;
+    resize: none;
+}
+
+div.documents-section form.form-inline {
+    margin-right: 0;
+    padding-right: 0;
+}

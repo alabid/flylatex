@@ -1,0 +1,69 @@
+<div class="row">
+  <div class="span7">
+    <div class="documents-section-errors">
+      <!-- put dynamic errors onhere -->
+      
+      <!-- it should like the errors on the other pages. Be consistent. -->
+    </div>
+    <h2>
+      <small>
+	<a class="current-doc" data-doc-id="" href="javascript:void(0);" onclick="docs_manager.openDoc($(this).attr('data-doc-id'));"></a>
+      </small>
+    </h2>
+    <div id="doc-area">
+      <textarea rows="10">
+      </textarea>
+    </div>
+  </div>
+  <div class="documents-section span4">
+    <div class="create-doc-block" style="display:none;">
+      <form class="well form-inline" onsubmit="docs_manager.createDoc($(this).find('input').val());">
+	<input type="text" class="input-medium" placeholder="New Document"/>
+	<button type="submit" class="btn">Create Doc</button>
+      </form>
+    </div>
+    <div class="btn-group pull-right">
+      <button class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+	Manage Docs
+	<span class="caret"></span>
+      </button>
+      <ul class="dropdown-menu">
+	<li>
+	  <a href="javascript:void(0);" onclick="docs_manager.openCreateDocView();">Create New Doc</a>
+	  <a href="javascript:void(0);" onclick="docs_manager.showDeleteButtons();">Delete Doc</a>
+	</li>
+      </ul>
+    </div>
+    <ul class="list-of-documents nav nav-list">
+      <li class="nav-header">
+	<b>My Latex Documents</b>
+      </li>
+      <!-- remember to set one of the <li>'s to "active" class -->
+      <% for (var i = 0; i < userDocuments.length; i++) { %>
+	 <!-- list of all the user's documents -->
+       <li data-doc-id="<%= userDocuments[i]._id %>">
+	<a onclick="docs_manager.openDoc(<%= userDocuments[i]._id %>);" href="javascript:void(0);">userDocuments[i].name</a>
+	<div class="btn-group" data-toggle="buttons-checkbox">
+	  <% if (userDocuments[i].readAccess) { %>
+	  <button onclick="docs_manager.reqReadAccess(<%= userDocuments[i]._id %>);" class="btn active">R</button>
+	  <% } else { %>
+	  <button onclick="docs_manager.reqReadAccess(<%= userDocuments[i]._id %>);" class="btn">R</button>
+	  <% } if (userDocuments[i].writeAccess) { %>
+	  <button onclick="docs_manager.reqWriteAccess(<%= userDocuments[i]._id %>);" class="btn active">W</button>
+	  <% } else { %>
+	  <button onclick="docs_manager.reqWriteAccess(<%= userDocuments[i]._id %>);" class="btn">W</button>
+	  <% } if (userDocuments[i].execAccess) { %>
+	  <button onclick="docs_manager.reqExecAccess(<%= userDocuments[i]._id %>);" class="btn active">X</button> 
+	  <% } else { %>
+	  <button onclick="docs_manager.reqExecAccess(<%= userDocuments[i]._id %>);" class="btn">X</button>
+	  <% } %>
+	  <% if (userDocuments[i].canShare) { %>
+	  <button class="btn" onclick="docs_manager.shareDoc(<%= userDocuments[i]._id %>);">Share</button>
+	  <% } %>
+	</div>
+	<button onclick="docs_manager.deleteDoc(<%= userDocuments[i]._id %>);" style="display:none;" class="close">x</button>
+     </li>
+      <% } %>
+    </ul>
+  </div>
+</div>
