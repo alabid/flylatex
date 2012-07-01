@@ -33,7 +33,6 @@
     <script type="text/javascript" src="/js/bootstrap.js"></script>
     <script type="text/javascript" src="/js/handlebars.js"></script>
 
-    <script type="text/javascript" src="/js/application.js"></script>
     <% if (typeof fileSpecificScript != "undefined") { %>
     <script type="text/javascript" src="/js/<%= fileSpecificScript %>"></script>
     <% } %>
@@ -79,7 +78,7 @@
       </div>
     </div>
 
-    <div class="container">
+    <div class="container second-container">
       <!-- display single info message here -->
       <% if (typeof info.length !== "undefined" && info != "")  { %>
       <div class="alert alert-info">
@@ -90,7 +89,6 @@
       <!-- end of display of single info message here -->
       
       <!-- display single error message here -->
-      <% console.log(error); %>
       <% if (typeof error.length !== "undefined" && error != "")  { %>
       <div class="alert alert-error">
 	<button class="close" data-dismiss="alert">x</button>
@@ -100,7 +98,7 @@
       <!-- end of display of single error message here -->
       
       <!-- display info messages here -->
-      <% if (typeof infos === "object") { %>
+      <% if (typeof infos === "object" && typeof infos.length === "undefined") { %>
       <div class="alert alert-info">
 	<button class="close" data-dismiss="alert">x</button>
 	<ul>
@@ -113,7 +111,7 @@
       <!-- end of display of info messages here -->
       
       <!-- display error messages here -->
-      <% if (typeof errors === "object") { %>
+      <% if (typeof errors === "object" && typeof errors.length === "undefined") { %>
       <div class="alert alert-error">
 	<button class="close" data-dismiss="alert">x</button>
 	<ul>
@@ -139,5 +137,7 @@
 	<p><a target="_blank" href="http://github.com/alabid/fly-latex">Fork our code on github</a>&nbsp;&copy; 2012</p>
       </footer>
     </div> <!-- /container -->
+    <!-- application.js load after every other script -->
+    <script type="text/javascript" src="/js/application.js"></script>
   </body>
 </html>

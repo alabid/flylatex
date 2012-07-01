@@ -55,7 +55,8 @@ var DocPrivilege = new Schema ({
      * 2 -> write
      * 1 -> execute
      */
-    , document: ObjectId
+    , documentId: ObjectId
+    , documentName: String
 });
 
 var Document = new Schema ({
@@ -113,8 +114,7 @@ User.method("encryptPassword", function(password) {
  * define middleware for models here
  */
 User.pre("save", function(next) {
-    if (!(this.password && this.password.length > 0
-	 && this.firstName && this.lastName
+    if (!(this.firstName && this.lastName
 	 && this.email && this.userName)) {
 	next(new Error("Invalid Params"));
     } else {

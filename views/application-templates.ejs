@@ -1,26 +1,43 @@
 <!-- template for a document list item -->
 <script id="doc-li-template" type="text/x-handlebars-template">
-  <li data-doc-id="{{_id}}">
-    <a onclick="docs_manager.openDoc({{_id}});" href="javascript:void(0);">{{name}}</a>
-    <div class="btn-group" data-toggle="buttons-checkbox">
+  <li data-doc-id="{{id}}">
+    <a style="float:left;clear:both" onclick="docs_manager.openDoc('{{id}}'); $(this).closest('li').addClass('active').siblings('li').removeClass('active');" href="javascript:void(0);">{{name}}</a>
+    <div class="btn-group pull-right">
       {{#if readAccess}}
-      <button onclick="docs_manager.reqReadAccess({{_id}});" class="btn active">R</button>
+      <button disabled class="btn">Read</button>
       {{else}}
-      <button onclick="docs_manager.reqReadAccess({{_id}});" class="btn">R</button>
+      <button onclick="docs_manager.reqReadAccess('{{id}}');" class="btn">Read</button>
       {{/if}}
       {{#if writeAccess}}
-      <button onclick="docs_manager.reqWriteAccess({{_id}});" class="btn active">W</button>
+      <button disabled onclick="docs_manager.reqWriteAccess('{{id}}');" class="btn">Write</button>
       {{else}}
-      <button onclick="docs_manager.reqWriteAccess({{_id}});" class="btn">W</button>
+      <button onclick="docs_manager.reqWriteAccess('{{id}}');" class="btn">Write</button>
       {{/if}}
       {{#if execAccess}}
-      <button onclick="docs_manager.reqExecAccess({{_id}});" class="btn active">X</button> 
+      <button disabled onclick="docs_manager.reqExecAccess('{{id}}');" class="btn">Exec</button> 
       {{else}}
-      <button onclick="docs_manager.reqExecAccess({{_id}});" class="btn">X</button>
+      <button onclick="docs_manager.reqExecAccess('{{id}}');" class="btn">Exec</button>
       {{/if}}
       {{#if canShare}}
-      <button class="btn" onclick="docs_manager.shareDoc({{_id}});;">Share</button>
+      <button class="btn" onclick="docs_manager.shareDoc('{{id}}');;">Share</button>
       {{/if}}
     </div>
+      <button onclick="docs_manager.deleteDoc('{{id}}');" style="display:none;" class="close">x</button>
   </li>
+</script>
+
+<!-- template for errors -->
+<script id="errors-template" type="text/x-handlebars-template">
+  <div class="alert alert-error">
+    <button class="close" data-dismiss="alert">x</button>
+    {{#listalert errors}}{{/listalert}}
+  </div>
+</script>
+
+<!-- template for infos -->
+<script id="infos-template" type="text/x-handlebars-template">
+  <div class="alert alert-info">
+    <button class="close" data-dismiss="alert">x</button>
+    {{#listalert infos}}{{/listalert}}
+  </div>
 </script>

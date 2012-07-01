@@ -2,7 +2,8 @@
  *  Define all routes here for the fly-latex application.
  *  
  */
-var mongoose = require("mongoose");
+var mongoose = require("mongoose")
+, Schema = mongoose.Schema;
 
 require("./models"); // import the models here
 
@@ -14,6 +15,16 @@ var User = mongoose.model("User")
 , Document = mongoose.model("Document")
 , DocumentLine = mongoose.model("DocumentLine")
 , DocPrivilege = mongoose.model("DocPrivilege");
+
+
+// ================ GLOBAL variables here =============
+
+// maximum number of documents a user can have
+var MAX_DOCS = 10;
+
+
+
+// ==================================================
 
 
 /*
@@ -28,10 +39,13 @@ var User = mongoose.model("User")
  * * isLoggedIn (should always go together with currentUser)
  * * tagLine
  * * currentDoc
- * * userDocuments 
+ * * userDocuments - this is an abstraction of the real Document model.
+     So it contains different attributes.
+     contains: id, name, readAccess, writeAccess, execAccess, canShare
  * * errors
  * * infos
 */
+
 
 /*
  * preGetIndex -
@@ -66,10 +80,12 @@ exports.preIndex = function(req, res, next) {
 			  return;
 		      } 
 		      // authenticate user against password entered
+		      console.log("==========user successfully logged in========");
 		      console.log(user);
+		      console.log("=============================================");
+		  
 		      if (!user || typeof user.authenticate != "function") {
 			  // is user even in db ? 
-			  console.log("I should see this!");
 			  req.flash("error", "There's no user called " + req.body.username + " in our database");
 			  res.redirect('back');
 			  return;
@@ -115,6 +131,7 @@ exports.index = function(req, res, err){
 				 req.session.userDocuments);
 
     if (req.session.currentUser && req.session.isLoggedIn) {
+	// display the documents for user
 	res.render("display-docs",
 		   {title: "Fly Latex: Start Editing Documents"
 		    , shortTitle: "Fly Latex"
@@ -124,10 +141,8 @@ exports.index = function(req, res, err){
 		    , isLoggedIn: req.session.isLoggedIn
 		    , userDocuments: req.session.userDocuments		    
 		   });
+	
     } else {
-	// user tried to log in but isn't in db
-
-
 	// user didn't try to log in 
 	res.render("not-logged-in",
 		   {title: "Log Into/Sign Into to FLY LATEX!"
@@ -137,6 +152,7 @@ exports.index = function(req, res, err){
     }
 };
 
+
 /*
  * logOutUser -
  * log user out
@@ -145,7 +161,7 @@ exports.logOutUser = function(req, res, next) {
     if (req.session.currentUser && req.session.isLoggedIn) {
 	req.session.regenerate(function(err) {
 	    if (err) {
-		console.log("sth went wrong");
+		console.log("==========Error while logging out=============");
 	    } 
 	    next();
 	});
@@ -230,7 +246,11 @@ exports.processSignUpData = function(req, res) {
 		      }
 		      newFlyUser.documentsPriv = [];
 		      newFlyUser.save(function(err) {
-			  console.log("================saved user=============");
+			  if (err) {
+			      console.log("==============Error in saving user======"); 
+			  } else  {
+			      console.log("================saved user=============");
+			  }
 			  console.log(newFlyUser);
 			  console.log("======================================");
 		      });
@@ -254,8 +274,227 @@ exports.processSignUpData = function(req, res) {
     }
 };
 
+/*
+* createDoc ->
+* creates a new document for the current user.
+* error if user not logged in.
+* then reloads the page with the new document
+* inserted for the user.
+*
+*/
+exports.createDoc = function(req, res) {
+    // prepare response object
+    var response = {infos:[]
+		    , errors: []
+		    , code:200
+		    , newDocument: {id:null
+				    , name:null
+				    , readAccess: true
+				    , writeAccess: true
+				    , execAccess: true
+				    , canShare: true}
+		   }
+    
+    var docName = req.body.docName;
+
+    if (!(docName.length && docName.length > 0)) {
+	// check that document's name is not empty
+	response.errors.push("Error in creating document with no title or name");
+	res.json(response);
+	return;
+    } else if (!(req.session.isLoggedIn && req.session.currentUser)) {
+	// user is not logged in
+	response.errors.push("You're not not logged in. Please log in!");
+	res.json(response);
+	return;
+    }
+
+    // check the list of documents
+    // verify that this new document doesn't
+    // have the same name as the old ones
+    var found = false;
+    for (var i = 0; i < req.session.userDocuments.length; i++) {
+	if (req.session.userDocuments[i].name == docName) {
+	    found = true;
+	    break;
+	}
+    }
+    if (found) {
+	response.errors.push("Error in creating document that shares its name with an already existing document you have.");
+	res.json(response);
+	return;
+    } else {
+	// then check that the user doesn't have up to MAX_DOCS documents yet
+	if (req.session.userDocumentsPriv.length+1 >= MAX_DOCS) {
+	    response.errors.push("You can't have more than " + MAX_DOCS + " documents. Delete some documents to create space.");
+	    res.json(response);
+	    return;		
+	} else {
+	    // so we can create a new document 
+	    // the new document will have only one line for starters
+	    var newDoc = createNewDocument(req.body.docName);
+
+	    // by default, document privilege for the
+	    // current user is 7 (full access)
+	    var docPriv = new DocPrivilege();
+	    docPriv.documentId = newDoc._id;
+	    docPriv.documentName = newDoc.name;
+	    
+	    // new user document to send off to front end for display
+	    var newUserDocument = {};
+	    
+	    User.findOne({"userName": req.session.currentUser}, function(err, user) {
+		if (err || !user) {
+		    response.errors.push("error", "Couldn't find you. Weird.");
+		    res.json(response);
+		    return;
+		}
+		
+		console.log("Document Priv Object created===============");
+		console.log(docPriv);
+		console.log("===========================================");
+		
+		// add to user's documentsPriv
+		user.documentsPriv.push(docPriv);
+		
+		// save the document
+		user.save();
+		
+		// add to the user's session data
+		newUserDocument.id = docPriv.documentId;
+		newUserDocument.name = docPriv.documentName;
+		
+		// user creating document should have full access to document
+		// R,W,X (and so can share the document with anyone)
+		newUserDocument.readAccess = true;
+		newUserDocument.writeAccess = true;
+		newUserDocument.execAccess = true;
+		newUserDocument.canShare = true;
+		
+		req.session.userDocuments.push(newUserDocument);
+		response.newDocument = newUserDocument;
+		
+		// inform user of new document creation
+		response.infos.push("Just created the new Document: " + req.body.docName + " Hooray!");
+		res.json(response);
+	    });
+	}
+    }    
+};
+		      
+/**
+* deleteDoc -
+* delete the document from the user's list of documents
+* both in the session data and on the database (his/her docPrivileges)
+* then delete the document from the Documents collection.
+* 
+* @note
+* this method is called asynchronously and should not redirect the user
+* or reload the page under any circumstances.
+*/
+exports.deleteDoc = function(req, res) {
+    // response to send back to user after successful deletion (or error)
+    var response = {errors:[], infos:[]};
+
+    // get document id,name for document to delete
+    var docId = req.body.docId
+    , docName;
+
+    if (!(req.session.currentUser && req.session.isLoggedIn)) {
+	response.errors.push("Weird. Seems like you're not logged in.");
+	res.json(response);
+	return;
+    }
+    // remove the document from Users collections
+    User.findOne({userName: req.session.currentUser}, function(err, user) {
+	if (err || !user) {
+	    console.log("unable to delete doc from " + user.userName + "'s list of documents");
+	    response.errors.push("Had problems processing your deletion. Try again.");
+	    res.json(response);
+	    return;
+	}
+	for (var i = 0; i < user.documentsPriv.length; i++) {
+	    if (user.documentsPriv[i].documentId == docId) {
+		docName = user.documentsPriv[i].documentName;
+		user.documentsPriv.splice(i, 1);
+
+		console.log("Removed documentsPriv with documentId: " + docId);
+	    }
+	}
+	
+	// save a document
+	user.save();
+
+	// change session object to reflect new change in user's documents
+	for (var i = 0; i < req.session.userDocuments.length; i++) {	    
+	    if (req.session.userDocuments[i].id == docId) {
+		req.session.userDocuments.splice(i,1);
+		
+		console.log("Removed userDocument with id: " + docId + " from session object");
+	    }
+	}
+		
+	// remove the document from Documents collections
+	// if no other user has it
+	DocPrivilege.find({documentId:docId}, function(err, docs) {
+	    if (docs.length == 0) {
+		// no other user has this document
+		Document.findOne({_id:docId}).remove(function(err) {
+		    if (!err) 
+			console.log("Removed document with _id " + docId + " completely from the database");
+		    else
+			console.log("Error while deleting document with id " + docId + " completely from the database");
+		});
+	    } else {
+		// some other user(s) has access to this document
+		console.log("Document(docId="+docId+") not deleted because some other users still have access to this document");
+	    }
+	});
+	if (response.errors.length == 0 && docName.length > 0) {
+	    response.infos.push("Successfully deleted the document " + docName);
+	    res.json(response);
+	}
+    });
+};
+
 
 // ============== Helper functions here ==========
+
+/**
+ * createNewDocument
+ * create a new document for the current user
+ *
+ * @param docName -> document name
+ * @return DocPrivilege -> representing new document
+ */
+var createNewDocument = function(docName) {
+    // create the first document line
+    // of the document
+    var newDocLine = new DocumentLine();
+    var newDocLineObj = {lineNum: 0
+			 , data: new Buffer(1)
+			};
+    for (var key in newDocLineObj) {
+	newDocLine[key] = newDocLineObj[key];
+    }
+    // save the document line
+    newDocLine.save();
+    
+    // create the document (with some properties)
+    var newDoc = new Document();
+    var newDocObj = {name: docName
+		     , lines: [newDocLine]
+		     , lastModified: new Date()
+		    };
+
+    for (var key in newDocObj) {
+	newDoc[key] = newDocObj[key];
+    }
+    // save the document
+    newDoc.save();
+    
+    return newDoc;
+};
 
 /*
  * Helper function
@@ -282,26 +521,48 @@ var loadUser = function(user) {
     
     obj.currentUser = user.userName;
     obj.isLoggedIn = true;
+    obj.userDocuments = [];
     obj.userDocumentsPriv = user.documentsPriv;
     
-    if (user.documentsPriv.length > 0) {
-	// load user's documents here
-	for (var i = 0; i < user.documentsPriv.length; i++) {
-	    Document.find({"_id":user.documentsPriv.document}
-			  , function(err, doc) {
-			      if (err) {
-				  console.log("error: ");
-				  console.log(error);
-			      } 
-			      obj.userDocuments.push(doc);
-			  });
+    // user document to send off to front end for display
+    var userDocument = {}
+    , priv;
+
+    user.documentsPriv.forEach(function(item, i) {
+	userDocument.id = item.documentId;
+	userDocument.name = item.documentName;
+	// set defaults here
+	userDocument.readAccess = false;
+	userDocument.writeAccess = false;
+	userDocument.execAccess = false;
+	userDocument.canShare = false;
+	
+	// set privileges here
+	priv = item.access;
+	
+	if (priv >= 4) {
+	    userDocument.readAccess = true;
+	    priv -= 4;
+	}
+	if (priv >= 2) {
+	    userDocument.writeAccess = true;
+	    priv -= 2;
+	}
+	if (priv == 1) {
+	    userDocument.execAccess = true;
+	}
+
+	// if user has R, W, X access, he can share the document
+	// else he cannot
+	if (userDocument.readAccess 
+	    && userDocument.writeAccess
+	    && userDocument.execAccess) {
+	    userDocument.canShare = true;
 	}
 	
-	
-    } else {
-	// user has no documents
-	obj.userDocuments = [];
-    }
+	obj.userDocuments.push(userDocument);
+	userDocument = {};
+    });
 
     return obj;
 }

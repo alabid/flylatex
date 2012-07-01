@@ -52,8 +52,15 @@ app.post('/', routes.preIndex, routes.index);
 app.get('/', routes.preIndex, routes.index);
 app.del('/', routes.logOutUser, routes.index);
 
+// for signing up on site
 app.get('/signup', routes.displaySignUpForm);
 app.post('/signup', routes.processSignUpData);
+
+// for creating a new document
+app.put('/createdoc', routes.createDoc);
+
+// for deleting a document
+app.del('/deletedoc', routes.deleteDoc);
 
 /** end of ROUTES */
 

@@ -7,7 +7,7 @@ function UserManager() {
 	    type: "DELETE"
 	    , url: "/"
 	    , success: function(response) {
-		document.location.href = "/";
+		reloadHome();
 	    }
 	});
     };
@@ -23,13 +23,48 @@ function DocsManager() {
      * Global Variables
      */
     var domTargets = {
-	documentList: $("ul.list-of-documents")
-	, docText: $("div#doc-area textarea")
-	, createDocBlock: $("div.documents-section div.create-doc-block")
+	documentList: "ul.list-of-documents"
+	, docText: "div#doc-area textarea"
+	, createDocBlock: "div.documents-section div.create-doc-block"
 	, singleDocEntry: Handlebars.compile($("#doc-li-template").html())
-	, currentDocLabel: $("a.current-doc")
+	, currentDocLabel: "a.current-doc"
+	, errorsBlock: Handlebars.compile($("#errors-template").html())
+	, infosBlock: Handlebars.compile($("#infos-template").html())
+	, bodySecondContainer: "div.second-container"
     };
     
+    /**
+     * clearAjaxAlertBlocks ->
+     * clears ajax alert infos and errors region to probably prepare for redisplay
+     * of new errors or infos.
+     *
+     */
+    var clearAjaxAlertBlocks = function() {
+	// clear out all alert blocks in DOM
+	$("div.alert").remove();
+    };
+
+    /**
+     * updateAjaxErrors ->
+     * updates ajax errors region with new errors
+     * @param errors : list of errors
+     */
+    var updateAjaxErrors = function(errors) {
+	$(domTargets.bodySecondContainer)
+	    .prepend(domTargets.errorsBlock({"errors":errors}));
+    };
+
+
+    /**
+     * updateAjaxInfos ->
+     * updates ajax infos region with new infos
+     * @param infos: list of info messages
+     */
+    var updateAjaxInfos = function(infos) {
+	$(domTargets.bodySecondContainer)
+	    .prepend(domTargets.infosBlock({"infos":infos}));
+    };
+
     /*
      * reqReadAccess
      * @param _id -> id of document to request read access to
@@ -75,26 +110,29 @@ function DocsManager() {
      * docName -> name of the document to create
      */
     this.createDoc = function(docName) {
-	
-	// send ajax request to create a new document for the
-	// current user
-	
-	// on success, add the document to the DOM
-	// like this:
-	// first get userDocument
-	// userDocument must have the following properties
-	// _id, name, and other stuff about the userDocument
-	// insert like this:
-	// domTargets.documentList.append(domTargets.singleDocEntry(userDocument))
-	// display success message to the user
-	// or display error message if any error message
-	
-	// if not display some error in div.documents-section-errors
+	$.ajax({
+	    type: "PUT"
+	    , data: {"docName": docName}
+	    , url: "/createdoc"
+	    , success: function(response) {
+		if (response.errors.length > 0) {
+		    clearAjaxAlertBlocks();
+		    updateAjaxErrors(response.errors);
+		    return;
+		} else if (response.infos.length > 0) {
+		    clearAjaxAlertBlocks();
+		    updateAjaxInfos(response.infos);
+		}
+		// get new user document object
+		var userDocument = response.newDocument;
+		
+		$(domTargets.documentList)
+		    .append(domTargets.singleDocEntry(userDocument))
 
-
-
-	// close the createDocView
-	docs_manager.closeCreateDocView();
+		// close the createDocView
+		docs_manager.closeCreateDocView();
+	    }
+	});
     };
 
     /*
@@ -126,27 +164,29 @@ function DocsManager() {
      * delete the document
      */
     this.deleteDoc = function(docId) {
-	// before deleting the document from the
-	// list of the current user's list
-	// of documents alert the user that he/she
-	// is about to delete a document
-	
+	if (confirm("Are you sure you want to delete the document?")) {
+	    $.ajax({
+		type: "DELETE"
+		, data: {"docId": docId}
+		, url: "/deletedoc"
+		, success: function(response) {
+		    if (response.errors.length > 0) {
+			clearAjaxAlertBlocks();
+			updateAjaxErrors(response.errors);
+			return;
+		    } else if (response.infos.length > 0) {
+			clearAjaxAlertBlocks();
+			updateAjaxInfos(response.infos);
+		    }
+		    $(domTargets.documentList)
+			.find("li[data-doc-id='"+docId+"']")
+			.remove();
 
-	// if the user consents to the delete,
-	// then delete
-	// else don't delete the document
+		    docs_manager.hideDeleteButtons();
+		}
+	    });
+	}
 
-	// in the case where he/she still
-	// wants to delete
-	// delete it from the DOM
-	// domTargets.documentList
-	//   .find("li[data-doc-id='"+ docId +"']")
-	//  .remove();
-
-	// and also delete it from the back end
-
-	// then hideDeleteButtons
-	docs_manager.hideDeleteButtons();
     };
 
     /*
@@ -169,7 +209,7 @@ function DocsManager() {
      * delete the documents he doesn't want again
      */
     this.showDeleteButtons = function() {
-	domTargets.documentList.find("button.close").show();
+	$(domTargets.documentList).find("button.close").show();
     };
 
     /*
@@ -177,23 +217,24 @@ function DocsManager() {
      * hide all x's in the documentList
      */
     this.hideDeleteButtons = function() {
-	domTargets.documentList.find("button.close").hide();
+	$(domTargets.documentList).find("button.close").hide();
     };
     
     /*
      * openCreateDocView -
      * Open create Document view
      */
-    this.openCreateDocView = function(docName) {
-	domTargets.createDocBlock.show();
+    this.openCreateDocView = function() {
+	$(domTargets.createDocBlock).show()
+	    .find('input').attr("value", "");
     };
     
     /*
      * closeCreateDocView -
      * Close create Document view
      */
-    this.closeCreateDocView = function(docName) {
-	domTargets.createDocBlock.hide();
+    this.closeCreateDocView = function() {
+	$(domTargets.createDocBlock).hide();
     };
 }
 
@@ -201,3 +242,20 @@ function DocsManager() {
 // window
 window["user_manager"] = new UserManager();
 window["docs_manager"] = new DocsManager();
+
+
+// ================ Helper functions =============
+var reloadHome = function() {
+    document.location.href = '/';
+};
+
+// ================ Handle bars helper functions ==========
+Handlebars.registerHelper('listalert', function(items, options) {
+    var out = "<ul>";
+    
+    for (var i = 0, l=items.length; i<l;i++) {
+	out = out + "<li>" + items[i] + "</li>";
+    }
+    
+    return out + "</ul>";
+});

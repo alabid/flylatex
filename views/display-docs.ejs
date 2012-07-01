@@ -17,8 +17,8 @@
   </div>
   <div class="documents-section span4">
     <div class="create-doc-block" style="display:none;">
-      <form class="well form-inline" onsubmit="docs_manager.createDoc($(this).find('input').val());">
-	<input type="text" class="input-medium" placeholder="New Document"/>
+      <form class="well form-inline" onsubmit="docs_manager.createDoc($(this).find('[name=docName]').val());return false;">
+	<input type="text" name="docName" class="input-medium" placeholder="New Document"/>
 	<button type="submit" class="btn">Create Doc</button>
       </form>
     </div>
@@ -39,29 +39,29 @@
 	<b>My Latex Documents</b>
       </li>
       <!-- remember to set one of the <li>'s to "active" class -->
+      <!-- list of all the user's documents -->
       <% for (var i = 0; i < userDocuments.length; i++) { %>
-	 <!-- list of all the user's documents -->
-       <li data-doc-id="<%= userDocuments[i]._id %>">
-	<a onclick="docs_manager.openDoc(<%= userDocuments[i]._id %>);" href="javascript:void(0);">userDocuments[i].name</a>
-	<div class="btn-group" data-toggle="buttons-checkbox">
+       <li data-doc-id="<%= userDocuments[i].id %>">
+	<a style="float:left;clear:both" onclick="docs_manager.openDoc('<%= userDocuments[i].id %>');$(this).closest('li').addClass('active').siblings('li').removeClass('active');" href="javascript:void(0);"><%= userDocuments[i].name %></a>
+	<div class="btn-group pull-right">
 	  <% if (userDocuments[i].readAccess) { %>
-	  <button onclick="docs_manager.reqReadAccess(<%= userDocuments[i]._id %>);" class="btn active">R</button>
+	  <button disabled class="btn">Read</button>
 	  <% } else { %>
-	  <button onclick="docs_manager.reqReadAccess(<%= userDocuments[i]._id %>);" class="btn">R</button>
+	  <button onclick="docs_manager.reqReadAccess('<%= userDocuments[i].id %>');" class="btn">Read</button>
 	  <% } if (userDocuments[i].writeAccess) { %>
-	  <button onclick="docs_manager.reqWriteAccess(<%= userDocuments[i]._id %>);" class="btn active">W</button>
+	  <button class="btn" disabled>Write</button>
 	  <% } else { %>
-	  <button onclick="docs_manager.reqWriteAccess(<%= userDocuments[i]._id %>);" class="btn">W</button>
+	  <button onclick="docs_manager.reqWriteAccess('<%= userDocuments[i].id %>');" class="btn">Write</button>
 	  <% } if (userDocuments[i].execAccess) { %>
-	  <button onclick="docs_manager.reqExecAccess(<%= userDocuments[i]._id %>);" class="btn active">X</button> 
+	  <button class="btn" disabled>Exec</button> 
 	  <% } else { %>
-	  <button onclick="docs_manager.reqExecAccess(<%= userDocuments[i]._id %>);" class="btn">X</button>
+	  <button onclick="docs_manager.reqExecAccess('<%= userDocuments[i].id %>');" class="btn">Exec</button>
 	  <% } %>
 	  <% if (userDocuments[i].canShare) { %>
-	  <button class="btn" onclick="docs_manager.shareDoc(<%= userDocuments[i]._id %>);">Share</button>
+	  <button class="btn" onclick="docs_manager.shareDoc('<%= userDocuments[i].id %>');">Share</button>
 	  <% } %>
 	</div>
-	<button onclick="docs_manager.deleteDoc(<%= userDocuments[i]._id %>);" style="display:none;" class="close">x</button>
+	<button onclick="docs_manager.deleteDoc('<%= userDocuments[i].id %>');" style="display:none;" class="close">x</button>
      </li>
       <% } %>
     </ul>
