@@ -5,11 +5,11 @@
  *
  */
 
-var express = require('express') , 
-routes = require('./routes') ,
-MongoStore = require('connect-mongo')(express);
 
-var app = module.exports = express.createServer();
+var express = require('express')
+,app = module.exports = express.createServer()
+,routes = require('./routes') 
+,MongoStore = require('connect-mongo')(express);
 
 
 // Configuration

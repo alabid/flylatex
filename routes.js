@@ -5,7 +5,7 @@
 var mongoose = require("mongoose")
 , Schema = mongoose.Schema;
 
-var app = require("app")
+var app = require("./app")
 , io = require("socket.io").listen(app);
 
 require("./models"); // import the models here
