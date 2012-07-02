@@ -19,10 +19,10 @@
       <button onclick="docs_manager.reqExecAccess('{{id}}');" class="btn">Exec</button>
       {{/if}}
       {{#if canShare}}
-      <button class="btn" onclick="docs_manager.shareDoc('{{id}}');;">Share</button>
+      <button class="btn" onclick="docs_manager.openShareDoc('{{id}}', '{{name}}');;">Share</button>
       {{/if}}
     </div>
-      <button onclick="docs_manager.deleteDoc('{{id}}');" style="display:none;" class="close">x</button>
+      <button onclick="docs_manager.deleteDoc('{{id}}', '{{name}}');" style="display:none;" class="close">x</button>
   </li>
 </script>
 
@@ -41,3 +41,73 @@
     {{#listalert infos}}{{/listalert}}
   </div>
 </script>
+
+<!-- modal box for displaying messages for a user -->
+<script id="messages-for-user" type="text/x-handlebars-template">
+  <div class="modal hide" id="messages-modal">
+    <div class="modal-header">
+      <button type="button" class="close" data-dismiss="modal">x</button>
+      <h3>My Messages</h3>
+    </div>
+    <div class="modal-body">
+      <div class="message-box">
+	{{#displaymessages messages}}
+	{{#if messageType == 0}} <!-- requestAccess-->
+        <b>{{fromUser}}</b> is requesting 
+	{{#if readAccess}}Read{{#if (writeAccess || execAccess)}}, {{/if}}{{/if}} 
+	{{#if writeAccess}}Write{{#if execAccess}}, {{/if}} 
+	{{#if execAccess}}Exec{{/if}}
+	<b>Access</b> to <strong>{{documentName}}</strong>
+	<form onsubmit="return false;">
+	  <button onclick="user_messages.grantAccess('{{fromUser}}','{{documentId}}', '{{documentName}}', access); $(this).closest('li').remove();" class="btn btn-primary">Grant</button>
+	  <button onclick="user_messages.declineAccess('{{fromUser}}', '{{documentId}}', access); $(this).closest('li').remove();" class="btn btn-danger">Decline</button>
+	</form>
+	{{/if}}      
+	{{#if messageType == 1}} <!-- shareAccess -->
+	<b>{{fromUser}}</b> wants to give you
+	{{#if readAccess}}Read{{#if (writeAccess || execAccess)}}, {{/if}}{{/if}} 
+	{{#if writeAccess}}Write{{#if execAccess}}, {{/if}} 
+	{{#if execAccess}}Exec{{/if}}
+	<b>Access</b> to <strong>{{documentName}}</strong>
+	<form onsubmit="return false;">
+	  <button onclick="user_messages.acceptAccess('{{fromUser}}', '{{documentId}}', '{{documentName}}', access); $(this).closest('li').remove();" class="btn btn-primary">Accept</button>
+	  <button onclick="user_messages.declineAccess('{{fromUser}}', '{{documentId}}', access);$(this).closest('li').remove();" class="btn btn-danger">Decline</button>
+	</form>
+	{{/if}}
+	{{/displaymessages}}
+	<button type="button" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</script>
+
+<!-- modal box for sharing documents among users -->
+<script id="share-document-modal" type="text/x-handlebars-template">
+  <div class="modal hide" id="share-modal">
+    <div class="modal-header">
+      <button type="button" class="close" data-dismiss="modal">x</button>
+      <h3>Share {{docName}}</h3>
+    </div>
+    <div class="modal-body">
+      <form class="form-vertical" onsubmit="return false;">
+	<strong>Grant</strong>
+	<input type="text" name="userToShare" value="" autocomplete="off" placeholder="Enter Username" data-provide="typeahead" data-purpose="usernames" data-items="4"/>
+	<input type="hidden" name="docName" value="{{docName}}"/>
+	<input type="hidden" name="docId" value="{{docId}}"/>
+
+	<input type="hidden" name="read-access" value="false"/>
+	<input type="hidden" name="write-access" value="false"/>
+	<input type="hidden" name="exec-access" value="false"/>
+	 
+	<div class="btn-group">
+	  <button class="btn" onclick="var box=$(this).closest('form').find('[name=read-access]');box.val() == 'false' ? box.val('true') : box.val('false') ; $(this).toggleClass('btn-success');return false;">Read</button>
+	  <button class="btn" onclick="var box=$(this).closest('form').find('[name=write-access]');box.val() == 'false' ? box.val('true') : box.val('false') ; $(this).toggleClass('btn-success'); return false;">Write</button>
+	  <button class="btn" onclick="var box=$(this).closest('form').find('[name=exec-access]');box.val() == 'false' ? box.val('true') : box.val('false') ; $(this).toggleClass('btn-success');return false;">Exec</button>
+	</div>
+	<strong>Access</strong>
+	to document <b>{{docName}}</b>
+	<button type="submit" onclick="docs_manager.shareDoc('{{docId}}', '{{docName}}', $(this).closest('form').find('[name=userToShare]').val(), $(this).closest('form').find('[name=read-access]').val() , $(this).closest('form').find('[name=write-access]').val() , $(this).closest('form').find('[name=exec-access]').val());$('#share-modal').modal('hide');return false;" class="btn btn-primary pull-right">Share</button>
+      </form>
+    </div>
+  </div>
+ </script>

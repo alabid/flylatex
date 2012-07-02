@@ -31,6 +31,7 @@
 	<li>
 	  <a href="javascript:void(0);" onclick="docs_manager.openCreateDocView();">Create New Doc</a>
 	  <a href="javascript:void(0);" onclick="docs_manager.showDeleteButtons();">Delete Doc</a>
+	  <a href="javascript:void(0);" onclick="user_messages.showMessages();">My Messages</a>
 	</li>
       </ul>
     </div>
@@ -58,10 +59,10 @@
 	  <button onclick="docs_manager.reqExecAccess('<%= userDocuments[i].id %>');" class="btn">Exec</button>
 	  <% } %>
 	  <% if (userDocuments[i].canShare) { %>
-	  <button class="btn" onclick="docs_manager.shareDoc('<%= userDocuments[i].id %>');">Share</button>
+	  <button class="btn" onclick="docs_manager.openShareDoc('<%= userDocuments[i].id %>', '<%= userDocuments[i].name %>');">Share</button>
 	  <% } %>
 	</div>
-	<button onclick="docs_manager.deleteDoc('<%= userDocuments[i].id %>');" style="display:none;" class="close">x</button>
+	<button onclick="docs_manager.deleteDoc('<%= userDocuments[i].id %>', '<%= userDocuments[i].name %>');" style="display:none;" class="close">x</button>
      </li>
       <% } %>
     </ul>

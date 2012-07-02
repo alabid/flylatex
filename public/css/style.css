@@ -43,3 +43,13 @@ div.documents-section form.form-inline {
     margin-right: 0;
     padding-right: 0;
 }
+
+div.modal-body div.btn-group {
+    padding: 20px 0 20px 40px;
+}
+
+div.message-box {
+    height: 500px;
+    width: 400px;
+    overflow: scroll;
+}

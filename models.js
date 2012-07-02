@@ -22,9 +22,7 @@ var User = new Schema ({
     , salt: String
     , firstName: String
     , lastName: String
-    , email: {type: String
-	      , index: {unique: true}
-	     }
+    , email: {type: String}
     , githubId: {type: String
 		 , default: ""
 		}
@@ -35,6 +33,20 @@ var User = new Schema ({
 		    , default: new Date()
 		   }
     , documentsPriv: [DocPrivilege] // list of DocPrivilege Objects
+});
+
+var Message = new Schema ({
+    messageType: Number
+    /*
+     * requestAccess: 0
+     * shareAccess: 1
+     * more to come...
+     */
+    , fromUser: String
+    , toUser: String
+    , documentId: ObjectId
+    , documentName: String
+    , access: Number // as in DocPrivilege model
 });
 
 var DocPrivilege = new Schema ({
@@ -130,8 +142,9 @@ User.pre("save", function(next) {
 // ii) Document
 // iii) DocumentLine
 // iv) DocPrivilege
+// v) Message
 mongoose.model("User", User);
 mongoose.model("Document", Document);
 mongoose.model("DocumentLine", DocumentLine);
 mongoose.model("DocPrivilege", DocPrivilege);
-
+mongoose.model("Message", Message);

@@ -62,6 +62,30 @@ app.put('/createdoc', routes.createDoc);
 // for deleting a document
 app.del('/deletedoc', routes.deleteDoc);
 
+// for sharing access to a document
+app.post('/shareaccess', routes.shareAccess);
+
+// for requesting access to a document
+app.post('/requestaccess', routes.requestAccess);
+
+// for requesting auto-complete data
+app.get('/autocomplete', routes.ajaxAutoComplete);
+
+// for getting messages for a user
+app.get('/showmessages', routes.getMessages);
+
+// for granting access to a document
+app.post('/grantaccess', routes.grantAccess);
+
+// for accepting invitation to have access to a document
+app.post('/acceptaccess', routes.acceptAccess);
+
+// add a new document to my list of sessions
+app.post('/adddoctosession', routes.addNewDocument);
+
+// delete a message
+app.post('/deletemessage', routes.deleteMessage);
+
 /** end of ROUTES */
 
 

@@ -28,10 +28,13 @@
       <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
 
-    <!-- load scripts here -->
+    <!-- load some js scripts here -->
     <script type="text/javascript" src="/js/jquery.min.js"></script>
     <script type="text/javascript" src="/js/bootstrap.js"></script>
     <script type="text/javascript" src="/js/handlebars.js"></script>
+    <script type="text/javascript" src="/js/bootbox.min.js"></script>
+    <!-- include socket.io here -->
+    <script type="text/javascript" src="/socket.io/socket.io.js"></script>
 
     <% if (typeof fileSpecificScript != "undefined") { %>
     <script type="text/javascript" src="/js/<%= fileSpecificScript %>"></script>
@@ -41,8 +44,7 @@
   <body>
     <!-- import our defined handle bars templates here -->
     <%- partial("application-templates.ejs") %>
-
-
+    
     <div class="navbar navbar-fixed-top">
       <div class="navbar-inner">
         <div class="container">
@@ -63,7 +65,7 @@
 	  <% if (typeof currentUser != "undefined" && typeof isLoggedIn != "undefined") { %>
 	    <% if (currentUser && isLoggedIn) { %>
 	    <div class="welcome-message pull-right">
-	      <strong>Welcome, </strong><%= currentUser %><a href="javascript:user_manager.logout();"> Logout</a>
+	      <strong>Welcome, </strong><span id="current-user-name"><%= currentUser %></span><a href="javascript:user_manager.logout();"> Logout</a>
 	    </div>
 	    <% } %>
 	  <% } else { %>
