@@ -537,14 +537,18 @@ exports.shareAccess = function(req, res) {
 	    // save the message to the messages collection
 	    newMessage.save();
 	    
+	    var withReadAccess = (options.withReadAccess == 'true')
+	    , withWriteAccess = (options.withWriteAccess == 'true')
+	    , withExecAccess = (options.withExecAccess == 'true');
+
 	    // send success message
 	    response.infos.push("You just granted "+options.userToShare+" "+
-				(options.withReadAccess ? "Read" +
-				 ((!options.withWriteAccess && !options.withExecAccess) 
+				(withReadAccess ? "Read" +
+				 ((!withWriteAccess && !withExecAccess) 
 				  ? " ": ", ") :"")+
-				(options.withWriteAccess ? "Write" +
-				 (!options.withExecAccess ? " ": ", ") : "") +
-				(options.withExecAccess ? "Exec " : " ") +
+				(withWriteAccess ? "Write" +
+				 (!withExecAccess ? " ": ", ") : "") +
+				(withExecAccess ? "Exec " : " ") +
 				"Access to " + options.docName);
 	    
 	    res.json(response);
@@ -682,9 +686,9 @@ exports.grantAccess = function(req, res) {
 	    newDocPriv.save();
 	    
 	    // save to user's list of document privileges
-	    user.documentsPriv.append(newDocPriv);
+	    user.documentsPriv.push(newDocPriv);
 	    user.save(); // save user
-
+	    console.log("access -> " + req.body.access);
 	    var priv = req.body.access 
 	    , readAccess = false
 	    , writeAccess = false
@@ -756,19 +760,16 @@ exports.acceptAccess = function(req, res) {
 	res.json(response);
 	return;
     }
+    
     User.findOne({"userName":req.session.currentUser}, function(err, user) {
-	// user found; create new document privilege object and save it
-	var newDocPriv = new DocPrivilege();
-	newDocPriv.access = req.body.access;
-	newDocPriv.documentName = req.body.documentName;
-	newDocPriv.documentId = req.body.documentId;
-	
-	// save
-	newDocPriv.save();
-	    
-	// save to user's list of document privileges
-	user.documentsPriv.append(newDocPriv);
-	user.save(); // save user
+	// first make sure the user doesn't already have some access to the document
+	// in that case, bump up the user's access
+	var userHasDoc = false;
+	req.session.userDocuments.forEach(function(item, index) {	    
+	    if (item.id == req.body.documentId) {
+		userHasDoc = true;
+	    }
+	});
 
 	var priv = req.body.access 
 	, readAccess = false
@@ -791,31 +792,66 @@ exports.acceptAccess = function(req, res) {
 	    execAccess = true;
 	}
 	
+	// new user document
 	var newUserDocument = {
-	    "id": newDocPriv.documentId
-	    , "name": newDocPriv.documentName
+	    "id": req.body.documentId
+	    , "name": req.body.documentName
 	    , "readAccess" : readAccess
 	    , "writeAccess" : writeAccess
 	    , "execAccess" : execAccess
 	    , "canShare" : canShare
 	};
-	// add to my session
-	req.session.userDocuments.push(newUserDocument);
 
-	// also send back so user can display in his/her DOM
-	response.newDocument = newUserDocument;
-	
-	// send acceptance message to user
-	response.infos.push("You just accepted "+
-			    (readAccess ? "Read" +
-			     ((!writeAccess && !execAccess) 
-			      ? " ": ", ") :"")+
-			    (writeAccess ? "Write" +
-			     (!execAccess ? " ": ", ") : "") +
-			    (execAccess ? "Exec " : " ") +
-			    "Access to " + req.body.documentName +
-			    " from " + req.body.acceptFromUser);
-	res.json(response);
+	if (userHasDoc) {
+	    // if user already has the document, upgrade access if possible
+	    for (var i = 0; i < user.documentsPriv.length; i++) {
+		if (user.documentsPriv[i].documentId == newUserDocument.id
+		    && user.documentsPriv[i].access < req.body.access) {
+		    user.documentsPriv[i].access = req.body.access;
+		    
+		    user.save();
+		    
+		    // send back duplicate message
+		    response.infos.push("You just upgraded your rights to the document " + newUserDocument.name);
+		    res.json(response);
+		    return;
+		}
+	    }
+	    // send back duplicate message
+	    response.infos.push("You already have higher or equal access to the document " + newUserDocument.name);
+	    res.json(response);	    
+	} else {	    
+	    // user doesn't already have access to document
+	    var newDocPriv = new DocPrivilege();
+	    newDocPriv.access = req.body.access;
+	    newDocPriv.documentName = req.body.documentName;
+	    newDocPriv.documentId = req.body.documentId;
+	    
+	    // save
+	    newDocPriv.save();
+	    
+	    // save to user's list of document privileges
+	    user.documentsPriv.push(newDocPriv);
+	    user.save(); // save user
+	    
+	    // add to my session if I don't have the document yet
+	    req.session.userDocuments.push(newUserDocument);
+	    
+	    // also send back so user can display in his/her DOM
+	    response.newDocument = newUserDocument;
+	    
+	    // send acceptance message to user
+	    response.infos.push("You just accepted "+
+				(readAccess ? "Read" +
+				 ((!writeAccess && !execAccess) 
+				  ? " ": ", ") :"")+
+				(writeAccess ? "Write" +
+				 (!execAccess ? " ": ", ") : "") +
+				(execAccess ? "Exec " : " ") +
+				"Access to " + req.body.documentName +
+				" from " + req.body.acceptFromUser);
+	    res.json(response);
+	}
     });
 };
 
@@ -866,7 +902,6 @@ exports.deleteMessage = function(req, res) {
 	    if (!err) {
 		console.log("You just deleted a message");
 		
-		response.infos.push("Successfully delined request or invitation");
 		res.json(response);
 	    } else {
 		console.log("Error while deleting a message");

@@ -123,7 +123,7 @@ function DocsManager() {
 			// update alerts
 			updateAlerts(response);
 			
-			$(domTargets.documentList)
+			$(domTargets.documentList).eq(0)
 			    .find("li[data-doc-id='"+docId+"']")
 			    .remove();
 			
@@ -238,11 +238,50 @@ function UserMessages() {
 	    , success: function(response) {
 		// update alerts
 		updateAlerts(response);
-
-		$("#messages-for-user").remove();
-		$(domTargets.bodySecondContainer)
-		    .prepend(domTargets.showMessagesBlock(response.messages));
-		$("#messages-for-user").modal("show");		
+		
+		if (response.messages.length == 0) {
+		    return;
+		} else {
+		    // add some more essential information
+		    // to the template object
+		    var messagesForTemplate = []
+		    , priv;
+		    response.messages.forEach(function(item, index) {
+			// set shareAccess, requestAccess flags
+			// some sugar
+			item.isRequestAccess = (item.messageType == 0 ? true : false);
+			item.isShareAccess = (item.messageType == 1 ? true : false);
+			// temporarily use priv here
+			priv = item.access;
+			item.eitherWriteOrExecAccess = (priv >= 4 ?
+							(priv == 6 // read only
+							 || priv == 5 // exec only 
+							 || priv == 7) : // has both
+							(priv == 2 // read only
+							|| priv == 1 // exec only
+							 || priv == 3)); // has both write and exec privileges
+			priv = item.access; 
+			item.readAccess = item.writeAccess = item.execAccess = false;
+			// de-couple privileges
+			if (priv >= 4) {
+			    priv -= 4;
+			    item.readAccess = true;
+			}
+			if (priv >= 2) {
+			    priv -= 2;
+			    item.writeAccess = true;
+			}
+			if (priv == 1) {
+			    item.execAccess = true;
+			}
+			messagesForTemplate.push(item);
+		    });
+		    console.log(messagesForTemplate);
+		    $("#messages-modal").remove();
+		    $(domTargets.bodySecondContainer)
+			.prepend(domTargets.showMessagesBlock({"messages": messagesForTemplate}));
+		    $("#messages-modal").modal("show");
+		}
 	    }
 	});
     };
@@ -305,6 +344,9 @@ function UserMessages() {
 	    , success: function(response) {
 		// update alerts
 		updateAlerts(response);
+		
+		// delete the message
+		deleteMessage(fromUser, documentId, access);
 	    }
 	});
     };
@@ -329,9 +371,13 @@ function UserMessages() {
 		// update alerts
 		updateAlerts(response);
 
+		// delete message
+		deleteMessage(fromUser, documentId, access);
+		
 		// add to my DOM
 		$(domTargets.documentList)
 		    .append(domTargets.singleDocEntry(response.newDocument));
+
 	    }
 	});
     };
@@ -345,6 +391,15 @@ function UserMessages() {
      * @param access -> access
      */
     this.declineAccess = function(fromUser, documentId, access) {
+	// for now, just delet ethe message
+	deleteMessage(fromUser, documentId, access);
+    };
+
+    /**
+     * deleteMessage -
+     * delete the message from messages collection
+     */
+    var deleteMessage = function(fromUser, documentId, access) {
 	$.ajax({
 	    type: "POST"
 	    , url: "/deletemessage"
@@ -356,7 +411,7 @@ function UserMessages() {
 		updateAlerts(response);
 	    }
 	});
-    };
+    }
 };
 
 // load instances of class into variables attached to the
@@ -376,7 +431,7 @@ var domTargets = {
     , errorsBlock: Handlebars.compile($("#errors-template").html())
     , infosBlock: Handlebars.compile($("#infos-template").html())
     , shareDocumentBlock: Handlebars.compile($("#share-document-modal").html())
-    , showMessagesBlock: Handlebars.compile($("#share-modal").html())
+    , showMessagesBlock: Handlebars.compile($("#messages-for-user").html())
     , bodySecondContainer: "div.second-container"
 };
 

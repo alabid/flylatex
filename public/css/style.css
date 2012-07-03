@@ -49,7 +49,18 @@ div.modal-body div.btn-group {
 }
 
 div.message-box {
-    height: 500px;
+    height: 300px;
     width: 400px;
     overflow: scroll;
+    background: #efefef;
+}
+
+div.request-access-box, div.share-access-box {
+    width: 350px;
+    background: #dedede;
+    height: 70px;
+}
+div.request-access-box form, div.share-access-box form {
+    margin-left: 30px;
+    margin-top: 10px;
 }

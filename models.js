@@ -47,6 +47,9 @@ var Message = new Schema ({
     , documentId: ObjectId
     , documentName: String
     , access: Number // as in DocPrivilege model
+    , timeSent: {type: Date
+		 , default: new Date()
+		}
 });
 
 var DocPrivilege = new Schema ({
