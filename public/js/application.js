@@ -521,7 +521,7 @@ var getAutoCompleteData = function(ev) {
     
 // ========================= Put socket.io logic here ==============================
 var socket = io.connect("http://localhost");
-socket.io("addedDocument", function(document) {
+socket.on("addedDocument", function(document) {
     // get my current username
     console.log("for user: " + document.forUser);
     console.log("current user name: " + $("#current-user-name").text());
