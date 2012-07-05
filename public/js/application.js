@@ -253,13 +253,8 @@ function UserMessages() {
 			item.isShareAccess = (item.messageType == 1 ? true : false);
 			// temporarily use priv here
 			priv = item.access;
-			item.eitherWriteOrExecAccess = (priv >= 4 ?
-							(priv == 6 // read only
-							 || priv == 5 // exec only 
-							 || priv == 7) : // has both
-							(priv == 2 // read only
-							|| priv == 1 // exec only
-							 || priv == 3)); // has both write and exec privileges
+			item.eitherWriteOrExecAccess = priv != 4; // has either write or exec privilege
+
 			priv = item.access; 
 			item.readAccess = item.writeAccess = item.execAccess = false;
 			// de-couple privileges
