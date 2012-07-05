@@ -750,7 +750,10 @@ exports.grantAccess = function(req, res) {
  * @param res: result object
  */
 exports.acceptAccess = function(req, res) {
-    var response = {errors:[], infos:[], newDocument:null};
+    var response = {errors:[], infos:[]
+		    , newDocument:null
+		    , reDisplay:false
+		    , userDocuments: req.session.userDocuments};
 
     /**
      * options passed in: fromUser, documentId, access
@@ -804,23 +807,40 @@ exports.acceptAccess = function(req, res) {
 
 	if (userHasDoc) {
 	    // if user already has the document, upgrade access if possible
+	    var upgrading = false;
+
 	    for (var i = 0; i < user.documentsPriv.length; i++) {
 		if (user.documentsPriv[i].documentId == newUserDocument.id
 		    && user.documentsPriv[i].access < req.body.access) {
+		    upgrading = true;
+
+		    // user should redisplay list of documents
+		    response.reDisplay = true;
+
 		    user.documentsPriv[i].access = req.body.access;
-		    
 		    user.save();
 		    
 		    // send back duplicate message
 		    response.infos.push("You just upgraded your rights to the document " + newUserDocument.name);
-		    res.json(response);
-		    return;
 		}
+	    }
+	    if (upgrading) {
+		for (var i = 0; i < req.session.userDocuments.length; i++) {
+		    if (req.session.userDocuments[i].id == newUserDocument.id) {
+			// upgrade all we've got
+			req.session.userDocuments[i] = newUserDocument;
+		    }
+		}
+		res.json(response);
+		return;
 	    }
 	    // send back duplicate message
 	    response.infos.push("You already have higher or equal access to the document " + newUserDocument.name);
 	    res.json(response);	    
 	} else {	    
+	    // user should redisplay list of documents
+	    response.reDisplay = true;
+
 	    // user doesn't already have access to document
 	    var newDocPriv = new DocPrivilege();
 	    newDocPriv.access = req.body.access;

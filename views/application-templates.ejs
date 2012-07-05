@@ -61,7 +61,7 @@
 	  <b>Access</b> to <strong>{{documentName}}</strong>
 	  <form onsubmit="return false;">
 	    <button onclick="user_messages.grantAccess('{{fromUser}}','{{documentId}}', '{{documentName}}', {{access}}); $(this).closest('li').remove();" class="btn btn-primary">Grant</button>
-	    <button onclick="user_messages.declineAccess('{{fromUser}}', '{{documentId}}', {{access}}); $(this).closest('li').remove();" class="btn btn-danger">Decline</button>
+	    <button onclick="user_messages.declineAccess('{{fromUser}}', '{{documentId}}', {{access}}); $(this).closest('li').remove();" class="pull-right btn btn-danger">Decline</button>
 	  </form>
 	</div>
 	{{/if}}      
@@ -74,7 +74,7 @@
 	  <b>Access</b> to <strong>{{documentName}}</strong>
 	  <form onsubmit="return false;">
 	    <button onclick="user_messages.acceptAccess('{{fromUser}}', '{{documentId}}', '{{documentName}}', {{access}}); $(this).closest('li').remove();" class="btn btn-primary">Accept</button>
-	    <button onclick="user_messages.declineAccess('{{fromUser}}', '{{documentId}}', {{access}});$(this).closest('li').remove();" class="btn btn-danger">Decline</button>
+	    <button onclick="user_messages.declineAccess('{{fromUser}}', '{{documentId}}', {{access}});$(this).closest('li').remove();" class="btn btn-danger pull-right">Decline</button>
 	  </form>
 	</div>
 	{{/if}}

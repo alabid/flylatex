@@ -58,9 +58,10 @@ div.message-box {
 div.request-access-box, div.share-access-box {
     width: 350px;
     background: #dedede;
-    height: 70px;
+    height: 60px;
+    padding: 20px;
 }
-div.request-access-box form, div.share-access-box form {
-    margin-left: 30px;
-    margin-top: 10px;
+
+div.request-access-box form button, div.share-access-box form button {
+    margin: 10px;
 }

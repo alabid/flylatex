@@ -374,10 +374,16 @@ function UserMessages() {
 		// delete message
 		deleteMessage(fromUser, documentId, access);
 		
-		// add to my DOM
-		$(domTargets.documentList)
-		    .append(domTargets.singleDocEntry(response.newDocument));
-
+		if (response.reDisplay) {
+		    $(domTargets.documentList).empty();
+		    console.log("user documents: ");
+		    console.log(response.userDocuments);
+		    // redisplay the entire list of documents
+		    response.userDocuments.forEach(function(item, index) {
+			$(domTargets.documentList)
+			    .append(domTargets.singleDocEntry(item));
+		    });
+		}
 	    }
 	});
     };
