@@ -48,15 +48,15 @@
 	  <% if (userDocuments[i].readAccess) { %>
 	  <button disabled class="btn">Read</button>
 	  <% } else { %>
-	  <button onclick="docs_manager.reqReadAccess('<%= userDocuments[i].id %>');" class="btn">Read</button>
+	  <button onclick="docs_manager.reqReadAccess('<%= userDocuments[i].id %>', '<%= userDocuments[i].name %>');" class="btn">Read</button>
 	  <% } if (userDocuments[i].writeAccess) { %>
 	  <button class="btn" disabled>Write</button>
 	  <% } else { %>
-	  <button onclick="docs_manager.reqWriteAccess('<%= userDocuments[i].id %>');" class="btn">Write</button>
+	  <button onclick="docs_manager.reqWriteAccess('<%= userDocuments[i].id %>', '<%= userDocuments[i].name %>');" class="btn">Write</button>
 	  <% } if (userDocuments[i].execAccess) { %>
 	  <button class="btn" disabled>Exec</button> 
 	  <% } else { %>
-	  <button onclick="docs_manager.reqExecAccess('<%= userDocuments[i].id %>');" class="btn">Exec</button>
+	  <button onclick="docs_manager.reqExecAccess('<%= userDocuments[i].id %>', '<%= userDocuments[i].name %>');" class="btn">Exec</button>
 	  <% } %>
 	  <% if (userDocuments[i].canShare) { %>
 	  <button class="btn" onclick="docs_manager.openShareDoc('<%= userDocuments[i].id %>', '<%= userDocuments[i].name %>');">Share</button>

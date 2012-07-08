@@ -6,7 +6,7 @@ var mongoose = require("mongoose")
 , Schema = mongoose.Schema;
 
 var app = require("./app")
-, io = require("socket.io").listen(app);
+ , io = require("socket.io").listen(app);
 
 require("./models"); // import the models here
 
@@ -60,7 +60,7 @@ var MESSAGE_TYPES = {
  * load currentUser's data before loading page
  * if user's not registered, just go to next
  * @param req -> request object
- * @param res -> result object
+ * @param res -> response object
  * @param next -> next (middleware) function (in callchain) to execute
  */
 exports.preIndex = function(req, res, next) {
@@ -90,10 +90,6 @@ exports.preIndex = function(req, res, next) {
 			  next();
 			  return;
 		      } 
-		      // authenticate user against password entered
-		      console.log("==========user successfully logged in========");
-		      console.log(user);
-		      console.log("=============================================");
 		  
 		      if (!user || typeof user.authenticate != "function") {
 			  // is user even in db ? 
@@ -106,6 +102,11 @@ exports.preIndex = function(req, res, next) {
 			  res.redirect('back');
 			  return;
 		      } else {
+			  // authenticate user against password entered
+			  console.log("==========user successfully logged in========");
+			  console.log(user);
+			  console.log("=============================================");
+			  
 			  // user authenticated! Can go in
 			  var loadedUser = loadUser(user);
 			  for (key in loadedUser) {
@@ -131,7 +132,7 @@ exports.preIndex = function(req, res, next) {
  * index
  * handles both get and post request on the / page
  * @param req -> request object
- * @param res -> result object
+ * @param res -> response object
  * @param err -> error object
  *
  */
@@ -172,7 +173,7 @@ exports.index = function(req, res, err){
  * logOutUser -
  * log user out
  * @param req -> request object
- * @param res -> result object
+ * @param res -> response object
  * @param next -> next (middleware) function (in callchain) to execute
  */
 exports.logOutUser = function(req, res, next) {
@@ -191,7 +192,7 @@ exports.logOutUser = function(req, res, next) {
  *  displays sign up form for user to sign up for
  *  fly latex
  * @param req -> request object
- * @param res -> result object
+ * @param res -> response object
  */
 exports.displaySignUpForm = function(req, res) {
     res.render("sign-up",
@@ -210,7 +211,7 @@ exports.displaySignUpForm = function(req, res) {
  *  up form and logs the user into fly latex
  *  , redirecting him to his home page.
  * @param req -> request object
- * @param res -> result object
+ * @param res -> response object
  */
 exports.processSignUpData = function(req, res) {
     var errors = {}; // key-value pair -> error Type : error Message
@@ -306,7 +307,7 @@ exports.processSignUpData = function(req, res) {
  * and not redirect or reload page.
  *
  * @param req -> request object
- * @param res -> result object
+ * @param res -> response object
  */
 exports.createDoc = function(req, res) {
     // prepare response object
@@ -358,7 +359,7 @@ exports.createDoc = function(req, res) {
 	} else {
 	    // so we can create a new document 
 	    // the new document will have only one line for starters
-	    var newDoc = createNewDocument(req.body.docName);
+	    var newDoc = createNewDocument(req.body.docName, req.session.currentUser);
 
 	    // by default, document privilege for the
 	    // current user is 7 (full access)
@@ -418,7 +419,7 @@ exports.createDoc = function(req, res) {
  * this method is called asynchronously and should not redirect the user
  * or reload the page under any circumstances.
  * @param req -> request object
- * @param res -> result object
+ * @param res -> response object
  */
 exports.deleteDoc = function(req, res) {
     // response to send back to user after successful deletion (or error)
@@ -476,6 +477,28 @@ exports.deleteDoc = function(req, res) {
 	    } else {
 		// some other user(s) has access to this document
 		console.log("Document(docId="+docId+") not deleted because some other users still have access to this document");
+
+		// then remove the current userName from the the list of users
+		// with share (full) access, if there
+		Document.findOne({_id: docId}, function(err, doc) {
+		    if (!err) {
+			var found = false
+			, i; // loop variable
+			
+			for (i = 0; i < doc.usersWithShareAccess.length; i++) {
+			    if (doc.usersWithShareAccess[i] == req.session.currentUser) {
+				found = true;
+				break;
+			    }
+			}
+			if (found) {
+			    doc.usersWithShareAccess.splice(i, 1);
+			    
+			    // save the document
+			    doc.save();
+			}
+		    }
+		});
 	    }
 	});
 	if (response.errors.length == 0 && docName.length > 0) {
@@ -488,7 +511,7 @@ exports.deleteDoc = function(req, res) {
 /**
  * shareAccess -> share access to a document
  * @param req -> request object
- * @param res -> result object
+ * @param res -> response object
  */
 exports.shareAccess = function(req, res) {
     var response = {errors:[], infos:[], code: 200};
@@ -542,7 +565,7 @@ exports.shareAccess = function(req, res) {
 	    , withExecAccess = (options.withExecAccess == 'true');
 
 	    // send success message
-	    response.infos.push("You just granted "+options.userToShare+" "+
+	    response.infos.push("You just invited "+options.userToShare+" to have "+
 				(withReadAccess ? "Read" +
 				 ((!withWriteAccess && !withExecAccess) 
 				  ? " ": ", ") :"")+
@@ -550,7 +573,13 @@ exports.shareAccess = function(req, res) {
 				 (!withExecAccess ? " ": ", ") : "") +
 				(withExecAccess ? "Exec " : " ") +
 				"Access to " + options.docName);
-	    
+	    // let the recipient of the message know that he has a new
+	    // message
+	   
+	    io.sockets.emit("newMessage", JSON.stringify(newMessage));
+
+
+	    // send response back to the client
 	    res.json(response);
 	}
     });    
@@ -560,7 +589,7 @@ exports.shareAccess = function(req, res) {
  * returns json of auto-complete results based on the purpose
  * 
  * @param req -> request object
- * @param res -> result object
+ * @param res -> response object
  */
 exports.ajaxAutoComplete = function(req, res) {
     /*
@@ -583,7 +612,9 @@ exports.ajaxAutoComplete = function(req, res) {
 	User.find({userName: new RegExp(typed)}, function(err, users) {
 	    if (!err) {
 		users.forEach(function(item, index) {
-		    data.results.push(item.userName);
+		    if (item.userName != req.session.currentUser) {
+			data.results.push(item.userName);
+		    }
 		});
 	    }
 	    res.json(data);
@@ -597,17 +628,74 @@ exports.ajaxAutoComplete = function(req, res) {
 /**
  * requestAccess -> request access to a document
  * @param req -> request object
- * @param res -> result object
+ * @param res -> response object
  */
 exports.requestAccess = function(req, res) {
-    
+    var response = {errors:[], infos:[], code: 200};
+
+    // get request access options
+    var options = req.body.options;
+
+    var priv = ((options.withReadAccess == "true" ? 4 : 0) +
+		(options.withWriteAccess == "true" ? 2 : 0) +
+		(options.withExecAccess == "true" ? 1 : 0));
+
+    // try to return error messages if any errors found
+    if (!(req.session.currentUser && req.session.isLoggedIn)) {
+	response.errors.push("You are not logged in. So you can't share access");
+    }
+    if (priv == 0) {
+	response.errors.push("You can't try to request for no privilege");
+    }
+    if (!(options.docId
+	  && options.docName)) {
+	response.errors.push("Options passed in are incomplete");
+    }
+
+    // first find the users that have share access (7:R,W,X) to the document
+    Document.findOne({_id: options.docId}, function(err, doc) {
+	if (err) {
+	    console.log("An error occured while trying to request access for " 
+			+ req.session.currentUser);
+	} else {	    
+	    if (doc.usersWithShareAccess.length > 0) {
+		var newMessage, i;
+		
+		for (i = 0; i < doc.usersWithShareAccess.length; i++) {
+		    newMessage = new Message();
+		    newMessage.messageType = MESSAGE_TYPES.requestAccess;
+		    newMessage.fromUser = req.session.currentUser;
+		    newMessage.toUser = doc.usersWithShareAccess[i];
+		    newMessage.documentId = options.docId;
+		    newMessage.documentName = options.docName;
+		    newMessage.access = priv;
+		    
+		    // save the message in the messages collection
+		    newMessage.save();
+		    
+		    // alert users that are logged in about message
+
+		    io.sockets.emit("newMessage", JSON.stringify(newMessage));
+		    
+ 		}
+		response.infos.push("Sent a 'Request More Privileges' message to all the users who have share access to the document, " + options.docName);
+		
+		res.json(response);
+	    } else {
+		response.errors.push("No user currently has Share Access to that document");
+		
+		// send response back
+		res.json(response);
+	    }
+	}
+    });
 };
 
 /**
  * getMessages ->
  * get the messages for the current user
  * @param req -> request object
- * @param res -> result object
+ * @param res -> response object
  *
  * @jsonreturn returns a list of user's messages
  *  each message object is of the form
@@ -657,13 +745,13 @@ exports.getMessages = function(req, res) {
  * grantAccess ->
  * grant another user access to some document
  * @param req : request object
- * @param res: result object
+ * @param res: response object
  */
 exports.grantAccess = function(req, res) {
-    var response = {errors: [], infos:[]};
+    var response = {errors: [], infos:[]}
     
     /**
-     * options passed in: fromUser, documentId, access
+     * options passed in: userToGrant, documentId, documentName, access
      */
     if (!(req.session.currentUser && req.session.isLoggedIn)) {
 	response.errors.push("You cannot grant access since you are not logged in.");
@@ -671,33 +759,36 @@ exports.grantAccess = function(req, res) {
 	return;
     }
     
-    User.findOne({"userName":req.body.fromUser}, function(err, user) {
+    User.findOne({"userName":req.body.userToGrant}, function(err, user) {
 	if (err || !user) {
-	    response.errors.push("No user " + req.body.fromUser + " exists an error occured while looking for this user");
+	    response.errors.push("No user " + req.body.userToGrant + " exists or an error occured while looking for this user");
 	    res.json(response);
 	} else {
-	    // user found; create new document privilege object and save it
-	    var newDocPriv = new DocPrivilege();
-	    newDocPriv.access = req.body.access;
-	    newDocPriv.documentName = req.body.documentName;
-	    newDocPriv.documentId = req.body.documentId;
-
-	    // save
-	    newDocPriv.save();
+	    // first make sure that userToGrant doesn't already have some access
+	    // to the document
+	    var userHasDoc = false;
 	    
-	    // save to user's list of document privileges
-	    user.documentsPriv.push(newDocPriv);
-	    user.save(); // save user
-	    console.log("access -> " + req.body.access);
-	    var priv = req.body.access 
+	    user.documentsPriv.forEach(function(item, index) {
+		if (item.documentId == req.body.documentId) {
+		    userHasDoc = true;
+		}
+	    });
+
+	    var priv = req.body.access
 	    , readAccess = false
 	    , writeAccess = false
 	    , execAccess = false
 	    , canShare = false;
+
+	    // give user power to be able to share the document with other users
+	    // if he/she has full access
 	    if (priv == 7) {
 		canShare = true;
+
+		giveUserSharePower(req.body.userToGrant, req.body.documentId);
 	    }
-	    // de-couple privileges
+
+	    // de-couple privileges here
 	    if (priv >= 4) {
 		readAccess = true;
 		priv -= 4;
@@ -709,36 +800,94 @@ exports.grantAccess = function(req, res) {
 	    if (priv == 1) {
 		execAccess = true;
 	    }
-	    
-	    response.infos.push("You just granted "+req.body.fromUser+" "+
-				(readAccess ? "Read" +
-				 ((!writeAccess && !execAccess) 
-				  ? " ": ", ") :"")+
-				(writeAccess ? "Write" +
-				 (!execAccess ? " ": ", ") : "") +
-				(execAccess ? "Exec " : " ") +
-				"Access to " + req.body.documentName);
-	    
-	    // notify the user just granted access that his/her request
-	    // has been granted immediately via socket.io
+
+	    // create new user document
 	    var newUserDocument = {
-		"id": newDocPriv.documentId
-		, "name": newDocPriv.documentName
+		"id": req.body.documentId
+		, "name": req.body.documentName
 		, "readAccess" : readAccess
 		, "writeAccess" : writeAccess
 		, "execAccess" : execAccess
 		, "canShare" : canShare
-		, "forUser" : req.body.fromUser
-		, "fromUser" : req.session.currentUser
+		, "forUser" : req.body.userToGrant
 	    };
-	    io.sockets.on("connection", function(socket) {
-		socket.emit("addedDocument", newUserDocument);
-	    });
+	    
+	    
+	    if (userHasDoc) {
+		var upgrading = false;
+		
+		// if userToShare already has the document, upgrade access if possible
+		for (var i = 0; i < user.documentsPriv.length; i++) {
+		    if (user.documentsPriv[i].documentId == newUserDocument.id
+		       && user.documentsPriv[i].access < req.body.access) {
+			upgrading = true;
 
-	    // send response
-	    res.json(response);
+			// userToShare should reload his/her list of documents
+			response.reloadDocs = true;
+
+			user.documentsPriv[i].access = parseInt(req.body.access);
+			
+			user.save(function(err) {
+			    if (!err) 
+				console.log("user successfully saved!");
+			    else
+				console.log("error occured while trying to save user");
+			    console.log(user);
+			});
+			
+			// send back message
+			response.infos.push("You just upgraded the privileges of "
+					   + req.body.userToGrant + " for the document "
+					   + req.body.documentName);
+
+			// notify userToShare you just upgraded his privileges on some document
+			io.sockets.emit("changedDocument", JSON.stringify(newUserDocument));
+			res.json(response);
+	    
+			break;		
+		    }
+		}
+		if (!upgrading) {
+		    // send back duplicate message
+		    response.infos.push(req.body.userToGrant + " already has higher or equal access to the document, " + req.body.documentName);
+		    res.json(response);
+		}
+	    } else {
+		// userToShare should definitely redisplay his list of documents
+		response.reloadDocs = true;
+		
+		var newDocPriv = new DocPrivilege();
+		newDocPriv.access = parseInt(req.body.access);
+		newDocPriv.documentName = req.body.documentName;
+		newDocPriv.documentId = req.body.documentId;
+		
+		// save
+		newDocPriv.save();
+	    
+		// save to user's list of document privileges
+		user.documentsPriv.push(newDocPriv);
+		user.save(); // save user
+
+		
+		response.infos.push("You just granted "+req.body.userToGrant+" "+
+				    (readAccess ? "Read" +
+				     ((!writeAccess && !execAccess) 
+				      ? " ": ", ") :"")+
+				    (writeAccess ? "Write" +
+				     (!execAccess ? " ": ", ") : "") +
+				    (execAccess ? "Exec " : " ") +
+				    "Access to " + req.body.documentName);
+		
+		// notify the user just granted access that his/her request
+		// has been granted immediately via socket.io
+
+		io.sockets.emit("changedDocument", JSON.stringify(newUserDocument));
+
+		
+		// send response
+		res.json(response);
+	    }	
 	}
-	
     });
 };
 
@@ -747,7 +896,7 @@ exports.grantAccess = function(req, res) {
  * accept another user's offer to have  
  * access to a document
  * @param req : request object
- * @param res: result object
+ * @param res: response object
  */
 exports.acceptAccess = function(req, res) {
     var response = {errors:[], infos:[]
@@ -756,14 +905,14 @@ exports.acceptAccess = function(req, res) {
 		    , userDocuments: req.session.userDocuments};
 
     /**
-     * options passed in: fromUser, documentId, access
+     * options passed in: acceptFromUser, documentId, documentName, access
      */    
     if (!(req.session.currentUser && req.session.isLoggedIn)) {
 	response.errors.push("You cannot accept the invitation since you aren't logged in");
 	res.json(response);
 	return;
     }
-    
+   
     User.findOne({"userName":req.session.currentUser}, function(err, user) {
 	// first make sure the user doesn't already have some access to the document
 	// in that case, bump up the user's access
@@ -779,9 +928,14 @@ exports.acceptAccess = function(req, res) {
 	, writeAccess = false
 	, execAccess = false
 	, canShare = false;
+	// give user power to be able to share the document with other users
+	// if he/she has full access
 	if (priv == 7) {
 	    canShare = true;
+	    
+	    giveUserSharePower(req.session.currentUser, req.body.documentId);
 	}
+	
 	// de-couple privileges
 	if (priv >= 4) {
 	    readAccess = true;
@@ -817,11 +971,12 @@ exports.acceptAccess = function(req, res) {
 		    // user should redisplay list of documents
 		    response.reDisplay = true;
 
-		    user.documentsPriv[i].access = req.body.access;
+		    user.documentsPriv[i].access = parseInt(req.body.access);
 		    user.save();
 		    
-		    // send back duplicate message
+		    // send back  message
 		    response.infos.push("You just upgraded your rights to the document " + newUserDocument.name);
+		    break;
 		}
 	    }
 	    if (upgrading) {
@@ -843,7 +998,7 @@ exports.acceptAccess = function(req, res) {
 
 	    // user doesn't already have access to document
 	    var newDocPriv = new DocPrivilege();
-	    newDocPriv.access = req.body.access;
+	    newDocPriv.access = parseInt(req.body.access);
 	    newDocPriv.documentName = req.body.documentName;
 	    newDocPriv.documentId = req.body.documentId;
 	    
@@ -876,10 +1031,40 @@ exports.acceptAccess = function(req, res) {
 };
 
 /**
+ * exports.reloadSession -
+ * reload the user's documents and send back the new documents
+ *
+ * @param req : request object
+ * @param res : result object
+ */
+exports.reloadSession = function(req, res) {
+    var response = {infos: [], errors: [], userDocuments: null};
+    
+    if (!(req.session.currentUser && req.session.isLoggedIn)) {
+	response.errors.push("You are not logged in.");
+	res.json(response);
+	return;
+    } else if (req.session.currentUser == req.body.document.forUser) {
+	User.findOne({userName: req.session.currentUser}, function(err, user) {
+	    // reload user
+	    var loadedUser = loadUser(user);
+	    for (key in loadedUser) {
+		req.session[key] = loadedUser[key];
+	    }
+	    
+	    // load userDocuments
+	    response.userDocuments = req.session.userDocuments;
+	    
+	    res.json(response);
+	});
+    }
+};
+
+/**
  * exports.addNewDocument -
  * add a new document to my list of documents in my session
  * @param req : request object
- * @param res : result object
+ * @param res : response object
  */
 exports.addNewDocument = function(req, res) {
     var response = {infos:[], errors: []};
@@ -917,7 +1102,7 @@ exports.deleteMessage = function(req, res) {
     } else {
 	Message.findOne({fromUser: req.body.fromUser
 			 , documentId: req.body.documentId
-			 , access: req.body.access
+			 , access: parseInt(req.body.access)
 			 , toUser: req.session.currentUser}).remove(function(err) {
 	    if (!err) {
 		console.log("You just deleted a message");
@@ -933,13 +1118,40 @@ exports.deleteMessage = function(req, res) {
 // ============== Helper functions here ==========
 
 /**
+ * giveUserSharePower
+ *
+ * if user has full access to doc, give user power to be able to 
+ * share the document with other users
+ *
+ * @param fromUser -> user to give full access to
+ * @param documentId -> document id of document concerned
+ */
+var giveUserSharePower = function(fromUser, documentId) {
+    Document.findOne({_id: documentId}, function(err, doc) {
+	if (!err) {
+	    if (doc.usersWithShareAccess.indexOf(fromUser) == -1) {
+		doc.usersWithShareAccess.push(fromUser);
+		
+		// save doc
+		doc.save();
+	    }
+	} else {
+	    console.log("An error occured while trying to note " 
+			+ "in document model that "
+			+ req.body.fromUser + " has full access to the doc");  
+	}
+    });
+};
+
+/**
  * createNewDocument
  * create a new document for the current user
  *
  * @param docName -> document name
+ * @param currentUser -> created by
  * @return DocPrivilege -> representing new document
  */
-var createNewDocument = function(docName) {
+var createNewDocument = function(docName, currentUser) {
     // create the first document line
     // of the document
     var newDocLine = new DocumentLine();
@@ -957,6 +1169,7 @@ var createNewDocument = function(docName) {
     var newDocObj = {name: docName
 		     , lines: [newDocLine]
 		     , lastModified: new Date()
+		     , usersWithShareAccess: [currentUser]
 		    };
 
     for (var key in newDocObj) {
@@ -1037,3 +1250,18 @@ var loadUser = function(user) {
     return obj;
 }
 
+/**
+ * Helper function to clone an object (deep copy)
+ * cloneObject
+ * @param obj : object to clone
+ */
+function cloneObject(obj) {
+    var clone = {};
+    for(var i in obj) {
+        if(typeof(obj[i])=="object")
+            clone[i] = cloneObject(obj[i]);
+        else
+            clone[i] = obj[i];
+    }
+    return clone;
+}

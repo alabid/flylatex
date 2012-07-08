@@ -83,6 +83,9 @@ app.post('/acceptaccess', routes.acceptAccess);
 // add a new document to my list of sessions
 app.post('/adddoctosession', routes.addNewDocument);
 
+// reload the documents in the session of the current user
+app.post('/reloadsession', routes.reloadSession);
+
 // delete a message
 app.post('/deletemessage', routes.deleteMessage);
 

@@ -84,6 +84,7 @@ var Document = new Schema ({
     , createdAt: {type: Date
 		  , default: new Date()
 		 }
+    , usersWithShareAccess: [String] // store userNames of users with full access to doc
 });
 
 var DocumentLine = new Schema({

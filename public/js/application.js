@@ -23,35 +23,71 @@ function DocsManager() {
      * reqReadAccess
      * @param _id -> id of document to request read access to
      */
-    this.reqReadAccess = function(_id) {
-	// send read access request to other user
-	
-	// TODO: each user should have interface to approve or 
-	// disapprove access to a document
+    this.reqReadAccess = function(id, name) {
+	displayRequestAccess('read', id, name);
     };
 
     /*
      * reqWriteAccess
      * @param _id -> id of document to request write access to
      */
-    this.reqWriteAccess = function(_id) {
-	// send write access request to other user
-	
-	// TODO: each user should have interface to approve or 
-	
+    this.reqWriteAccess = function(id, name) {
+	displayRequestAccess('write', id, name);	
     };
     
     /*
       * reqExecAccess
       * @param _id -> id of document to request execute access to
      */
-    this.reqExecAccess = function(_id) {
-	// send execute access request to other user
-	
-	// TODO: each user should have interface to approve or 
-	// disapprove access to a document
+    this.reqExecAccess = function(id, name) {
+	displayRequestAccess('exec', id, name);
     };
 
+    /*
+     * displayRequestAccess ->
+     * open a light box that shows the accesses a user's requesting for.
+     * 
+     * @param type: either read, write, or exec or a list of privileges
+    */
+    var displayRequestAccess = function(privs, id, name) {
+	if (typeof privs == "undefined")  {
+	    return; 
+	}
+	// get current privs the user has
+	var privsForDoc = [];
+	$(domTargets.documentList).find("[data-doc-id="+id+"] button")
+	    .filter(":disabled")
+	    .each(function(i, elem) {
+		privsForDoc.push($(elem).text().toLowerCase());
+	    });
+
+	// remove any previously displayed request access modals
+	$("#request-access").remove();
+
+	// default request object
+	var requestObj = {docId: id
+			  , docName: name
+			  , read: false
+			  , write: false
+			  , exec: false};
+
+	privsForDoc.forEach(function(item, index){
+	    requestObj[item] = true;
+	});
+
+	if (typeof privs.push != "undefined") {
+	    privs.forEach(function(item, index) {
+		requestObj[item] = true;	
+	    });
+	} else if (typeof privs == "string") {
+	    requestObj[privs] = true;
+	}
+	// prepend the modal to the DOM and display
+	$(domTargets.bodySecondContainer)
+	    .prepend(domTargets.requestAccessBlock(requestObj));
+	
+	$("#request-access").modal("show");
+    };
     /*
      * this.createDoc
      *
@@ -186,6 +222,36 @@ function DocsManager() {
     };
 
     /*
+     * this.requestDoc
+     * @param docId: id of document to request access to
+     * @param docName: name of document to request access to
+     * @param withReadAccess: request read access
+     * @param withWriteAccess: request write access
+     * @param withExecAccess: request exec access
+     */
+    this.requestDoc = function(docId, docName
+			     , withReadAccess, withWriteAccess, withExecAccess) {
+	console.log("document to request has id " + docId + ";name " + docName);
+	console.log("with R,W,R: " + withReadAccess + "," + withWriteAccess + "," + withExecAccess);
+	var withReadAccess = (withReadAccess === "true");
+	var withWriteAccess = (withWriteAccess === "true");
+	var withExecAccess = (withExecAccess === "true");
+	
+	// send message to all users that have share access to the document
+	// that has documentId, docId
+	// if no user has shareAccess to the document, notify user
+	// that no user has shareAccess to that document
+	var options = {
+	    "docId":docId
+	    ,"docName":docName
+	    , "withReadAccess":withReadAccess
+	    , "withWriteAccess":withWriteAccess
+	    , "withExecAccess":withExecAccess
+	};
+	user_messages.sendMessage('requestAccess', options);
+    };
+
+    /*
      * showDeleteButtons -
      * show the delete buttons so that the user can 
      * delete the documents he doesn't want again
@@ -249,8 +315,8 @@ function UserMessages() {
 		    response.messages.forEach(function(item, index) {
 			// set shareAccess, requestAccess flags
 			// some sugar
-			item.isRequestAccess = (item.messageType == 0 ? true : false);
-			item.isShareAccess = (item.messageType == 1 ? true : false);
+			item.isRequestAccess = item.messageType == 0;
+			item.isShareAccess = item.messageType == 1;
 			// temporarily use priv here
 			priv = item.access;
 			item.eitherWriteOrExecAccess = priv != 4; // has either write or exec privilege
@@ -284,7 +350,7 @@ function UserMessages() {
      * sendMessage -
      * @param messageType -> type of message to send
      * @param options -> map of message meta-data and content
-     *  options = {'docId':,'docName':,'userToShare':,'withReadAccess':,
+     *  options = {'docId':,'docName':,['userToShare':],'withReadAccess':,
      *             'withWriteAccess':,'withExecAccess':}
      * 
      */
@@ -433,6 +499,7 @@ var domTargets = {
     , infosBlock: Handlebars.compile($("#infos-template").html())
     , shareDocumentBlock: Handlebars.compile($("#share-document-modal").html())
     , showMessagesBlock: Handlebars.compile($("#messages-for-user").html())
+    , requestAccessBlock: Handlebars.compile($("#request-access-modal").html())
     , bodySecondContainer: "div.second-container"
 };
 
@@ -576,29 +643,68 @@ var getAutoCompleteData = function(ev) {
     
     
 // ========================= Put socket.io logic here ==============================
-var socket = io.connect("http://localhost");
-socket.on("addedDocument", function(document) {
+
+var socket = io.connect("http://localhost:5000");
+
+
+// handle the changedDocument event
+socket.on("changedDocument", function(docString) {
+    console.log("in changed document : " + docString);
+    var document;
+    if (typeof docString == "string") {
+	document = JSON.parse(docString);
+    } else if (typeof docString == "object") {
+	document = docString;
+    } else {
+	console.log("Wrong type for docString");
+	return;
+    }
+    
     // get my current username
     console.log("for user: " + document.forUser);
     console.log("current user name: " + $("#current-user-name").text());
     
-    if (document.forUser !== $("#current-user-name").text()) {
+    if (document.forUser !== $("#current-user-name").text().trim()) {
 	return;
     }
-
-    // add to my list of documents in my sessoin
+    
+    // add to my list of documents in my session
     $.ajax({
 	type: "POST"
-	, url: "adddoctosession"
+	, url: "/reloadsession"
 	, data: {"document": document}
 	, success: function(response) {
 	    // update alerts
 	    updateAlerts(response);
-
-	    // add to my DOM
-	    $(domTargets.documentList)
-		.append(domTargets.singleDocEntry(document));
+	    
+	    // redisplay documents
+	    $(domTargets.documentList).empty();
+	    console.log(response);
+	    response.userDocuments.forEach(function(item, index) {
+		$(domTargets.documentList)
+		    .append(domTargets.singleDocEntry(item));
+	    });
 	}
     });
 });
+
+// handle the newMessage event
+socket.on("newMessage", function(messageStr) {
+    var message = JSON.parse(messageStr);
+    
+    console.log("to user ::==> " + message.toUser);
+    console.log(message);
+    console.log("current user naem ::==> " + $("#current-user-name").text().trim());
+    if (message.toUser !== $("#current-user-name").text().trim()) {
+	return;
+    }
+    
+    // notify user instantly of message
+    var response = {infos:[], errors:[]};
+    response.infos.push("You have a new message from " + message.fromUser 
+			+ " about the document, " + message.documentName + "."
+			+ " Check your mail for more details!");
+    updateAlerts(response);
+});
+
 // =================================================================================

@@ -6,17 +6,17 @@
       {{#if readAccess}}
       <button disabled class="btn">Read</button>
       {{else}}
-      <button onclick="docs_manager.reqReadAccess('{{id}}');" class="btn">Read</button>
+      <button onclick="docs_manager.reqReadAccess('{{id}}', '{{name}}');" class="btn">Read</button>
       {{/if}}
       {{#if writeAccess}}
-      <button disabled onclick="docs_manager.reqWriteAccess('{{id}}');" class="btn">Write</button>
+      <button disabled class="btn">Write</button>
       {{else}}
-      <button onclick="docs_manager.reqWriteAccess('{{id}}');" class="btn">Write</button>
+      <button onclick="docs_manager.reqWriteAccess('{{id}}', '{{name}}');" class="btn">Write</button>
       {{/if}}
       {{#if execAccess}}
-      <button disabled onclick="docs_manager.reqExecAccess('{{id}}');" class="btn">Exec</button> 
+      <button disabled class="btn">Exec</button> 
       {{else}}
-      <button onclick="docs_manager.reqExecAccess('{{id}}');" class="btn">Exec</button>
+      <button onclick="docs_manager.reqExecAccess('{{id}}', '{{name}}');" class="btn">Exec</button>
       {{/if}}
       {{#if canShare}}
       <button class="btn" onclick="docs_manager.openShareDoc('{{id}}', '{{name}}');;">Share</button>
@@ -114,3 +114,50 @@
     </div>
   </div>
  </script>
+
+<!-- modal box for requesting access to documents among users -->
+<script id="request-access-modal" type="text/x-handlebars-template">
+  <div class="modal hide" id="request-access">
+    <div class="modal-header">
+      <button type="button" class="close" data-dismiss="modal">x</button>
+      <h3>Request Access to {{docName}}</h3>
+    </div>
+    <div class="modal-body">
+      <form class="form-vertical" onsubmit="return false;">
+	You are <strong>requesting</strong>
+	<input type="hidden" name="docName" value="{{docName}}"/>
+	<input type="hidden" name="docId" value="{{docId}}"/>
+
+	<input type="hidden" name="read-access"
+	       {{#if read}}
+	       value="true"
+	       {{else}}
+	       value="false"
+	       {{/if}}
+	/>
+	<input type="hidden" name="write-access" 
+	       {{#if write}}
+	       value="true"
+	       {{else}}
+	       value="false"
+	       {{/if}}	       
+	/>
+	<input type="hidden" name="exec-access"
+	       {{#if exec}}
+	       value="true"
+	       {{else}}
+	       value="false"
+	       {{/if}}	
+	/>	 
+	<div class="btn-group">
+	  <button class="btn {{#if read}}btn-success{{/if}}" onclick="var box=$(this).closest('form').find('[name=read-access]');box.val() == 'false' ? box.val('true') : box.val('false') ; $(this).toggleClass('btn-success');return false;">Read</button>
+	  <button class="btn {{#if write}}btn-success{{/if}}" onclick="var box=$(this).closest('form').find('[name=write-access]');box.val() == 'false' ? box.val('true') : box.val('false') ; $(this).toggleClass('btn-success'); return false;">Write</button>
+	  <button class="btn {{#if exec}}btn-success{{/if}}" onclick="var box=$(this).closest('form').find('[name=exec-access]');box.val() == 'false' ? box.val('true') : box.val('false') ; $(this).toggleClass('btn-success');return false;">Exec</button>
+	</div>
+	<strong>Access</strong>
+	to document <b>{{docName}}</b>
+	<button type="submit" onclick="docs_manager.requestDoc('{{docId}}', '{{docName}}', $(this).closest('form').find('[name=read-access]').val() , $(this).closest('form').find('[name=write-access]').val() , $(this).closest('form').find('[name=exec-access]').val());$('#request-access').modal('hide');return false;" class="btn btn-primary pull-right">Send Request</button>
+      </form>
+    </div>
+  </div>
+</script>
