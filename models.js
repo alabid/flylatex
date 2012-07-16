@@ -12,6 +12,29 @@ var crypto = require("crypto")
 , Schema = mongoose.Schema
 , ObjectId = Schema.ObjectId;
 
+var DocPrivilege = new Schema ({
+    access: {type: Number
+	     , default: 7
+	    }
+    /*
+     * 7 - full
+     * 6 - read and write
+     * 5 - read and execute
+     * 4 - read only
+     * 3 - write and execute
+     * 2 - write only
+     * 1 - execute only
+     * 0 - none
+     *
+     * 4 -> read
+     * 2 -> write
+     * 1 -> execute
+     */
+    , documentId: ObjectId
+    , documentName: String
+});
+
+
 var User = new Schema ({
     userName: {type: String
 	       , index: {unique: true}
@@ -52,27 +75,14 @@ var Message = new Schema ({
 		}
 });
 
-var DocPrivilege = new Schema ({
-    access: {type: Number
-	     , default: 7
-	    }
-    /*
-     * 7 - full
-     * 6 - read and write
-     * 5 - read and execute
-     * 4 - read only
-     * 3 - write and execute
-     * 2 - write only
-     * 1 - execute only
-     * 0 - none
-     *
-     * 4 -> read
-     * 2 -> write
-     * 1 -> execute
-     */
-    , documentId: ObjectId
-    , documentName: String
+var DocumentLine = new Schema({
+    lineNum: Number
+    , data: Buffer 
+    , lastModified: {type: Date
+		     , default: new Date()
+		    }
 });
+
 
 var Document = new Schema ({
     name: String
@@ -87,13 +97,6 @@ var Document = new Schema ({
     , usersWithShareAccess: [String] // store userNames of users with full access to doc
 });
 
-var DocumentLine = new Schema({
-    lineNum: Number
-    , data: Buffer 
-    , lastModified: {type: Date
-		     , default: new Date()
-		    }
-});
 
 /*
  * virtual methods here

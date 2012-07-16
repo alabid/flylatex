@@ -26,18 +26,19 @@ footer p {
 
 div.documents-section {
     height: 500px;
-    border-left-color: blue;
-    border-left-style: solid;
-    border-left-width: 2px;
     padding: 30px;
     padding-top: 0;
     margin-bottom: 30px;
 }
 
-div#doc-area textarea {
-    width: 500px;
-    resize: none;
+#editor {
+    position: relative;
+    top: 30px;
+    width: 700px;
+    height: 500px;
+    margin-bottom: 50px;
 }
+
 
 div.documents-section form.form-inline {
     margin-right: 0;
@@ -64,4 +65,27 @@ div.request-access-box, div.share-access-box {
 
 div.request-access-box form button, div.share-access-box form button {
     margin: 10px;
+}
+
+#header {
+    height: 30px;
+    width: 700px;
+    background-color: black;
+    font-size: 16px;
+}
+
+#htext {
+    line-height: 30px;
+    vertical-align: middle;
+    
+    padding-left: 10px;
+    color: white;
+    font-family: baskerville, palatino, 'palatino linotype', georgia,serif; 
+}
+
+
+.save-document-link {
+    margin-left: 50px;
+    font-size: 18px;
+    text-decoration: underline;
 }

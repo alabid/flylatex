@@ -7,12 +7,14 @@
 
 
 var express = require('express')
-,app = module.exports = express.createServer()
-,routes = require('./routes') 
-,MongoStore = require('connect-mongo')(express);
+, app = module.exports = express.createServer()
+, sharejs = require('share').server
+, routes = require('./routes') 
+, MongoStore = require('connect-mongo')(express);
 
 
-// Configuration
+
+// Global server Configuration
 app.configure(function(){
     app.set('views', __dirname + '/views');
     app.set('view engine', 'ejs');
@@ -44,10 +46,17 @@ app.configure('production', function(){
     app.use(express.errorHandler());
 });
 
+
+// ========= ShareJS configuration ============
+// attach the sharejs REST and socket.io interfaces to the server
+var sharejsOptions = {db: {type: 'none'}};
+
+sharejs.attach(app, sharejsOptions);
+
+
 /**
  * Routes
  */
-
 app.post('/', routes.preIndex, routes.index); 
 app.get('/', routes.preIndex, routes.index);
 app.del('/', routes.logOutUser, routes.index);
@@ -69,7 +78,7 @@ app.post('/shareaccess', routes.shareAccess);
 app.post('/requestaccess', routes.requestAccess);
 
 // for requesting auto-complete data
-app.get('/autocomplete', routes.ajaxAutoComplete);
+app.get('/autocomplete', routes.ajaxAutoComplete); 
 
 // for getting messages for a user
 app.get('/showmessages', routes.getMessages);
@@ -88,6 +97,12 @@ app.post('/reloadsession', routes.reloadSession);
 
 // delete a message
 app.post('/deletemessage', routes.deleteMessage);
+
+// load a document
+app.get('/document/:documentId', routes.preIndex, routes.openDocument);
+
+// save the text for a document
+app.post('/savedoc', routes.saveDocument);
 
 /** end of ROUTES */
 

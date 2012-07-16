@@ -1,7 +1,7 @@
 <!-- template for a document list item -->
 <script id="doc-li-template" type="text/x-handlebars-template">
   <li data-doc-id="{{id}}">
-    <a style="float:left;clear:both" onclick="docs_manager.openDoc('{{id}}'); $(this).closest('li').addClass('active').siblings('li').removeClass('active');" href="javascript:void(0);">{{name}}</a>
+    <a style="float:left;clear:both" href="/document/{{id}}">{{name}}</a>
     <div class="btn-group pull-right">
       {{#if readAccess}}
       <button disabled class="btn">Read</button>

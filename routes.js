@@ -2,11 +2,18 @@
  *  Define all routes here for the fly-latex application.
  *  
  */
-var mongoose = require("mongoose")
-, Schema = mongoose.Schema;
 
-var app = require("./app")
- , io = require("socket.io").listen(app);
+// =============================== MUST TELL BUGS ===========
+
+// schema order bug
+
+// ==========================================================
+
+var mongoose = require("mongoose")
+, Schema = mongoose.Schema
+, app = require("./app")
+, io = require('socket.io').listen(app);
+
 
 require("./models"); // import the models here
 
@@ -24,13 +31,17 @@ var User = mongoose.model("User")
 // ================ GLOBAL variables here =============
 
 // maximum number of documents a user can have
-var MAX_DOCS = 10;
+var MAX_DOCS = 20;
 
 // messageTypes
 var MESSAGE_TYPES = {
     'requestAccess': 0
     , 'shareAccess': 1
 };
+
+// currently opened documents
+// map of docId : [username]
+var openDocuments = {};
 
 // ==================================================
 
@@ -163,7 +174,7 @@ exports.index = function(req, res, err){
 	res.render("not-logged-in",
 		   {title: "Log Into/Sign Into to FLY LATEX!"
 		    , shortTitle: "FLY LATEX"
-		    , tagLine: "Real Time editor in node-js"
+		    , tagLine: "Real Time Collaborative editor in node-js"
 		    , fileSpecificStyle: "not-logged-in.css"});
     }
 };
@@ -352,7 +363,7 @@ exports.createDoc = function(req, res) {
 	return;
     } else {
 	// then check that the user doesn't have up to MAX_DOCS documents yet
-	if (req.session.userDocumentsPriv.length+1 >= MAX_DOCS) {
+	if (req.session.userDocuments.length >= MAX_DOCS) {
 	    response.errors.push("You can't have more than " + MAX_DOCS + " documents. Delete some documents to create space.");
 	    res.json(response);
 	    return;		
@@ -535,6 +546,11 @@ exports.shareAccess = function(req, res) {
 	  && options.userToShare)) {
 	response.errors.push("Options passed in are incomplete");
     }
+    if (priv < 4) {
+	response.errors.push("You should share at least 'Read' privilege");
+	res.json(response);
+	return;
+    }
 
     User.findOne({userName: options.userToShare}, function(err, user) {
 	if (err) {
@@ -576,7 +592,7 @@ exports.shareAccess = function(req, res) {
 	    // let the recipient of the message know that he has a new
 	    // message
 	   
-	    io.sockets.emit("newMessage", JSON.stringify(newMessage));
+	    io.sockets.volatile.emit("newMessage", JSON.stringify(newMessage));
 
 
 	    // send response back to the client
@@ -652,6 +668,14 @@ exports.requestAccess = function(req, res) {
 	response.errors.push("Options passed in are incomplete");
     }
 
+    if (priv < 4) {
+	response.errors.push("You should request for at least read access to a document ");
+    }
+
+    if (response.errors.length > 0) {
+	res.json(response);
+	return;
+    }
     // first find the users that have share access (7:R,W,X) to the document
     Document.findOne({_id: options.docId}, function(err, doc) {
 	if (err) {
@@ -674,8 +698,7 @@ exports.requestAccess = function(req, res) {
 		    newMessage.save();
 		    
 		    // alert users that are logged in about message
-
-		    io.sockets.emit("newMessage", JSON.stringify(newMessage));
+		    io.sockets.volatile.emit("newMessage", JSON.stringify(newMessage));
 		    
  		}
 		response.infos.push("Sent a 'Request More Privileges' message to all the users who have share access to the document, " + options.docName);
@@ -764,6 +787,13 @@ exports.grantAccess = function(req, res) {
 	    response.errors.push("No user " + req.body.userToGrant + " exists or an error occured while looking for this user");
 	    res.json(response);
 	} else {
+	    // make sure the user's granting at least read access 
+	    if (req.body.access < 4) {
+		response.errors. push("You should grant a user at least 'Read' privilge");
+		res.json(response);
+		return;
+	    }
+	    
 	    // first make sure that userToGrant doesn't already have some access
 	    // to the document
 	    var userHasDoc = false;
@@ -832,7 +862,6 @@ exports.grantAccess = function(req, res) {
 				console.log("user successfully saved!");
 			    else
 				console.log("error occured while trying to save user");
-			    console.log(user);
 			});
 			
 			// send back message
@@ -841,7 +870,7 @@ exports.grantAccess = function(req, res) {
 					   + req.body.documentName);
 
 			// notify userToShare you just upgraded his privileges on some document
-			io.sockets.emit("changedDocument", JSON.stringify(newUserDocument));
+			io.sockets.volatile.emit("changedDocument", JSON.stringify(newUserDocument));
 			res.json(response);
 	    
 			break;		
@@ -880,8 +909,7 @@ exports.grantAccess = function(req, res) {
 		
 		// notify the user just granted access that his/her request
 		// has been granted immediately via socket.io
-
-		io.sockets.emit("changedDocument", JSON.stringify(newUserDocument));
+		io.sockets.volatile.emit("changedDocument", JSON.stringify(newUserDocument));
 
 		
 		// send response
@@ -911,6 +939,12 @@ exports.acceptAccess = function(req, res) {
 	response.errors.push("You cannot accept the invitation since you aren't logged in");
 	res.json(response);
 	return;
+    }
+
+    // make sure the privilege to accept is at least read privilege
+    if (parseInt(req.body.access) < 4) {
+	response.errors.push("You should accept at least 'Read' privilege");
+	res.json(response);
     }
    
     User.findOne({"userName":req.session.currentUser}, function(err, user) {
@@ -1115,7 +1149,162 @@ exports.deleteMessage = function(req, res) {
     }
 };
 
+/**
+ * openDocument ->
+ * opens a document
+ *
+ * @param req : request object
+ * @param res : response object
+ * 
+ * @getparam documentId : id of document to open
+ */
+exports.openDocument = function(req, res) {
+    // retrieve the document id from url
+    var documentId = req.params.documentId;
+
+    // first retrieve the name of the document
+    Document.findOne({_id:documentId}, function(err, doc) {
+	if (err || !doc) {
+	    req.flash("error", "An Error Occured while trying to open the document");
+	    res.redirect('back');
+	    return;
+	}
+
+	// assemble the document lines
+	var docLines = []
+	, lastModified
+	, userDoc
+	, docInSession
+	, writeable
+	, sharesWith;
+
+	// retrieve the document from the current user session
+	docInSession = searchForDocsInSession(documentId, req.session);	
+	
+
+	// get document lines
+	doc.lines.forEach(function(item, index) {
+	    docLines.push(item.data.toString());
+	    
+	    if (!lastModified || lastModified < item.lastModified) {
+		lastModified = item.lastModified;
+	    }
+	});
+	
+	sharesWith = (openDocuments[documentId] ?
+		      openDocuments[documentId] : []);
+
+	if (openDocuments[documentId] && openDocuments[documentId].indexOf(req.session.currentUser) == -1) {
+	    openDocuments[documentId].push(req.session.currentUser);
+	}
+	
+	// then record that this document is now opened by the current user
+	if (!openDocuments[documentId]) {
+	    openDocuments[documentId] = [req.session.currentUser];
+	}
+	
+	// construct a user document
+	userDoc = {
+	    "id" : documentId
+	    , "name" : doc.name
+	    , "text" : escape(docLines.join()) // escape special characters
+	    , "lastSaved" : lastModified
+	    , "sharesWith" : sharesWith
+	    , "readAccess" : docInSession.readAccess
+	    , "writeAccess" : docInSession.writeAccess
+	    , "execAccess" : docInSession.execAccess
+	    , "canShare" : docInSession.canShare
+	};
+	
+	// render the document you just opened
+	res.render("open-document",{
+	    title: "Viewing the document, "+ doc.name
+	    , shortTitle: "Fly Latex"
+	    , tagLine: "Viewing the document, " + doc.name
+	    , fileSpecificStyle: "open-document.css"
+	    , fileSpecificScript: "open-document.js"
+	    , userDocument: userDoc
+	    , currentUser: req.session.currentUser
+	    , isLoggedIn: req.session.isLoggedIn
+	    , userDocuments: req.session.userDocuments
+	});
+    });
+};
+
+/**
+ * saveDocument - 
+ * saves the document in DB
+ *
+ * @param req : request object
+ * @param res : response object
+ */
+exports.saveDocument = function(req, res) {
+    var response = {code: 400, errors: [], infos: []}
+    , documentId = req.body.documentId
+    , documentName = req.body.documentName
+    , documentText = req.body.documentText
+    , maxDocLine = 1024 // a document line has max. length of 1024 
+    , lineNum = 0; // keep track of the current line number
+
+    Document.findOne({_id:documentId}, function(err, doc){
+	var newLine; 
+	
+	if (err || !doc) {
+	    response.errors.push("Error in finding document to save");
+	    res.json(response);
+	    return;
+	}
+		
+	// save document text in form of document lines
+	while (documentText.length > 0) {
+	    newLine = new DocumentLine();
+	    
+	    newLine.lineNum = lineNum;
+	    
+	    newLine.data = new Buffer(documentText.slice(0, maxDocLine));
+	    newLine.lastModified = new Date();
+	    
+	    newLine.save(function(err) {
+		if (!err) 
+		    console.log("new line saved successfully!");
+	    });
+	    
+	    doc.lines[lineNum] = newLine;
+    
+	    documentText = documentText.slice((lineNum+1)*maxDocLine);
+	    lineNum++;	
+	}
+	
+	if (doc.lines[lineNum]) {
+	    doc.lines.splice(lineNum);
+	}
+	// save the document
+	doc.save();
+
+	// after save
+	response.code = 200;
+	response.infos.push("Successfully saved the document");
+	res.json(response);
+    });
+};
+
 // ============== Helper functions here ==========
+/**
+ * searchForDocsInSession
+ * search for document in session.userDocuments
+ *
+ * @param documentId - id of document to search for
+ * @param session - session object for current user
+ * @return document
+ */
+var searchForDocsInSession = function(documentId, session) {
+    for (var i = 0; i < session.userDocuments.length; i++) {
+	if (session.userDocuments[i].id == documentId) {
+	    return session.userDocuments[i];
+	}
+    }
+    return null;
+};
 
 /**
  * giveUserSharePower
@@ -1156,7 +1345,7 @@ var createNewDocument = function(docName, currentUser) {
     // of the document
     var newDocLine = new DocumentLine();
     var newDocLineObj = {lineNum: 0
-			 , data: new Buffer(1)
+			 , data: new Buffer(0)
 			};
     for (var key in newDocLineObj) {
 	newDocLine[key] = newDocLineObj[key];

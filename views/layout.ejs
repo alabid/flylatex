@@ -33,9 +33,10 @@
     <script type="text/javascript" src="/js/bootstrap.js"></script>
     <script type="text/javascript" src="/js/handlebars.js"></script>
     <script type="text/javascript" src="/js/bootbox.min.js"></script>
+
     <!-- include socket.io here -->
     <script type="text/javascript" src="/socket.io/socket.io.js"></script>
-
+    
     <% if (typeof fileSpecificScript != "undefined") { %>
     <script type="text/javascript" src="/js/<%= fileSpecificScript %>"></script>
     <% } %>
@@ -136,10 +137,37 @@
 	<%- body %>
       </div><!-- /content -->
       <footer>
-	<p><a target="_blank" href="http://github.com/alabid/fly-latex">Fork our code on github</a>&nbsp;&copy; 2012</p>
+	<p><a target="_blank" href="http://github.com/alabid/fly-latex">Daniel Alabi: fly-latex app</a>&nbsp;&copy; 2012</p>
       </footer>
     </div> <!-- /container -->
+    <% if (typeof userDocument != "undefined") { %> 
+    <!-- load ace js here -->
+    <script type="text/javascript" src="/js/ace/src/ace.js"></script>
+    <script type="text/javascript" src="/js/ace/src/mode-latex.js"></script>
+    <script type="text/javascript" src="/js/ace/src/theme-idle_fingers.js"></script>
+    <!-- load sharejs scripts to make the ace editor function -->
+    <script type="text/javascript" src="/channel/bcsocket.js"></script>
+    <script type="text/javascript" src="/share/share.js"></script>
+    <script type="text/javascript" src="/share/ace.js"></script>
+
+    <script type="text/javascript" src="/js/ace-locals.js"></script>
+    <script type="text/javascript">
+      var onloadDoc = {
+      "id" : '<%= userDocument.id %>'
+      , "name": '<%= userDocument.name %>'
+      , "text": unescape('<%= userDocument.text %>')
+      , "lastSaved": '<%= userDocument.lastSaved %>'
+      , "sharesWith": '<%= userDocument.sharesWith %>'
+      , "readAccess" : '<%= userDocument.readAccess %>'
+      , "writeAccess" : '<%= userDocument.writeAccess %>'
+      , "execAccess" : '<%= userDocument.execAccess %>'
+      , "canShare" : '<%= userDocument.canShare %>'
+      };
+    </script>  
+    <% } %>
+    
     <!-- application.js load after every other script -->
     <script type="text/javascript" src="/js/application.js"></script>
+
   </body>
 </html>

@@ -19,6 +19,14 @@ function UserManager() {
  * user.
  */
 function DocsManager() {    
+    // ========= Global variables here ==========
+    var currentDoc = null
+    , oldDoc = null
+    , versionNum = 0;
+
+    // ==========================================
+
+
     /*
      * reqReadAccess
      * @param _id -> id of document to request read access to
@@ -120,30 +128,59 @@ function DocsManager() {
 	});
     };
 
+
     /*
-     * this.openDocument
+     * this.openDocOnLoad - 
+     * open the document when you load the page
      *
-     * @param docId -> id of document to open
-     * 
-     * Open the document in the text area
+     * @param onloadDoc -> object that looks like this
+     *   var onloadDoc = {
+     *  "id" :
+     * , "name": 
+     * , "text": 
+     * , "lastSaved":
+     * , "sharesWith":
+     * , "readAccess" :
+     * , "writeAccess" :
+     * , "execAccess" : 
+     * , "canShare" : 
+     * };
+     *
+     *
+     * Open the document in the editor on load
      * so load the document from the database
      * then put the document lines in the textarea
      * 
      */
-    this.openDoc = function(docId) {
-	// load Document object
-	
-	// load Document lines
-	// and place in text area
-	
-	// update current doc label
-	// load userDocument
-	// domTargets.currentDocLabel.html(userDocument.name);
-	// domTargets.currentDocLabel.attr("data-doc-id", userDocument._id);
-	// domTargets.currentDocLabel.attr("onclick"
-	//                                ,"docs_manager.openDoc("+userDocument._id+")");
-    };
+    this.openDocOnLoad = function(onloadDoc) {
+	// open sharejs doc in session first
+	sharejs.open(onloadDoc.id, "text", function(error, doc) {
+	    if (oldDoc) {
+		oldDoc.close();
+	    }
+	    currentDoc = doc; // store doc object	    	    
 
+	    var userDoc = onloadDoc;
+	    
+	    // make editor writeable if user has write permission on document
+	    if (userDoc.writeAccess) {
+		editor.setReadOnly(false);
+	    } else {
+		editor.setReadOnly(true);
+	    }
+	    
+	    // load document text here
+	    if (doc.created) {
+		doc.insert(0, userDoc.text);
+	    }
+	    
+	    doc.attach_ace(editor);	    
+	    
+	    oldDoc = doc;	    
+	});	     
+    };
+    
+    
     /*
      * this.deleteDoc
      * delete the document
@@ -159,11 +196,19 @@ function DocsManager() {
 			// update alerts
 			updateAlerts(response);
 			
-			$(domTargets.documentList).eq(0)
+			$(domTargets.documentList)
 			    .find("li[data-doc-id='"+docId+"']")
 			    .remove();
 			
 			docs_manager.hideDeleteButtons();
+
+			// remove from openedDocs, openedDocsWriteable
+			// if document was opened
+			if (openedDocs.indexOf(docId) != -1) {
+			    var  i = openedDocs.indexOf(docId);
+			    openedDocs.splice(i, 1);
+			    openedDocsWriteable.splice(i, 1);
+			}
 		    }
 		});
 	    }
@@ -188,7 +233,49 @@ function DocsManager() {
 	$("#share-modal [name=userToShare]").typeahead()
 	    .on("keyup", getAutoCompleteData);
     };
-    
+
+    /*
+     * this.saveDoc
+     *
+     * @param docId -> id of document to save
+     * @param docName -> name of document to save
+     *
+     * Save the document in the db
+     * 
+     */
+    this.saveDoc = function(docId, docName) {
+	// save the document
+
+	$.ajax({
+	    type: "POST"
+	    , data: {"documentId" : docId
+		     , "documentName" : docName
+		     , "documentText": currentDoc.getText()}
+	    , url: "/savedoc"
+	    , success: function(response) {
+		// update alerts
+		updateAlerts(response);
+	    }
+	});
+	
+	
+	/*
+	// load Document object
+	
+	*/
+	
+	// load Document lines (in one document); client knows nothing
+	// about the document lines
+	// and place in text area
+	
+	// update current doc label
+	// load userDocument
+	// domTargets.currentDocLabel.html(userDocument.name);
+	// domTargets.currentDocLabel.attr("data-doc-id", userDocument._id);
+	// domTargets.currentDocLabel.attr("onclick"
+	//                                ,"docs_manager.openDoc("+userDocument._id+")");
+    };
+
     /*
      * this.shareDoc
      * @param docId: id of document to share
@@ -201,9 +288,6 @@ function DocsManager() {
     this.shareDoc = function(docId, docName
 			     ,userToShare 
 			     , withReadAccess, withWriteAccess, withExecAccess) {
-	console.log("document to share has id " + docId + ";name " + docName);
-	console.log("user to share has username " + userToShare);
-	console.log("with R,W,R: " + withReadAccess + "," + withWriteAccess + "," + withExecAccess);
 	var withReadAccess = (withReadAccess === "true");
 	var withWriteAccess = (withWriteAccess === "true");
 	var withExecAccess = (withExecAccess === "true");
@@ -231,8 +315,7 @@ function DocsManager() {
      */
     this.requestDoc = function(docId, docName
 			     , withReadAccess, withWriteAccess, withExecAccess) {
-	console.log("document to request has id " + docId + ";name " + docName);
-	console.log("with R,W,R: " + withReadAccess + "," + withWriteAccess + "," + withExecAccess);
+
 	var withReadAccess = (withReadAccess === "true");
 	var withWriteAccess = (withWriteAccess === "true");
 	var withExecAccess = (withExecAccess === "true");
@@ -337,7 +420,7 @@ function UserMessages() {
 			}
 			messagesForTemplate.push(item);
 		    });
-		    console.log(messagesForTemplate);
+
 		    $("#messages-modal").remove();
 		    $(domTargets.bodySecondContainer)
 			.prepend(domTargets.showMessagesBlock({"messages": messagesForTemplate}));
@@ -437,8 +520,7 @@ function UserMessages() {
 		
 		if (response.reDisplay) {
 		    $(domTargets.documentList).empty();
-		    console.log("user documents: ");
-		    console.log(response.userDocuments);
+
 		    // redisplay the entire list of documents
 		    response.userDocuments.forEach(function(item, index) {
 			$(domTargets.documentList)
@@ -491,10 +573,9 @@ window["user_messages"] = new UserMessages();
  */
 var domTargets = {
     documentList: "ul.list-of-documents"
-    , docText: "div#doc-area textarea"
     , createDocBlock: "div.documents-section div.create-doc-block"
     , singleDocEntry: Handlebars.compile($("#doc-li-template").html())
-    , currentDocLabel: "a.current-doc"
+    , currentDocLabel: "#header #docname"
     , errorsBlock: Handlebars.compile($("#errors-template").html())
     , infosBlock: Handlebars.compile($("#infos-template").html())
     , shareDocumentBlock: Handlebars.compile($("#share-document-modal").html())
@@ -644,12 +725,11 @@ var getAutoCompleteData = function(ev) {
     
 // ========================= Put socket.io logic here ==============================
 
-var socket = io.connect("http://localhost:5000");
+var socket = io.connect("http://localhost:5000/");
 
 
 // handle the changedDocument event
 socket.on("changedDocument", function(docString) {
-    console.log("in changed document : " + docString);
     var document;
     if (typeof docString == "string") {
 	document = JSON.parse(docString);
@@ -661,8 +741,6 @@ socket.on("changedDocument", function(docString) {
     }
     
     // get my current username
-    console.log("for user: " + document.forUser);
-    console.log("current user name: " + $("#current-user-name").text());
     
     if (document.forUser !== $("#current-user-name").text().trim()) {
 	return;
@@ -679,7 +757,7 @@ socket.on("changedDocument", function(docString) {
 	    
 	    // redisplay documents
 	    $(domTargets.documentList).empty();
-	    console.log(response);
+
 	    response.userDocuments.forEach(function(item, index) {
 		$(domTargets.documentList)
 		    .append(domTargets.singleDocEntry(item));
@@ -692,9 +770,6 @@ socket.on("changedDocument", function(docString) {
 socket.on("newMessage", function(messageStr) {
     var message = JSON.parse(messageStr);
     
-    console.log("to user ::==> " + message.toUser);
-    console.log(message);
-    console.log("current user naem ::==> " + $("#current-user-name").text().trim());
     if (message.toUser !== $("#current-user-name").text().trim()) {
 	return;
     }
@@ -708,3 +783,4 @@ socket.on("newMessage", function(messageStr) {
 });
 
 // =================================================================================
+

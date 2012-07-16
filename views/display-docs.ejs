@@ -5,15 +5,6 @@
       
       <!-- it should like the errors on the other pages. Be consistent. -->
     </div>
-    <h2>
-      <small>
-	<a class="current-doc" data-doc-id="" href="javascript:void(0);" onclick="docs_manager.openDoc($(this).attr('data-doc-id'));"></a>
-      </small>
-    </h2>
-    <div id="doc-area">
-      <textarea rows="10">
-      </textarea>
-    </div>
   </div>
   <div class="documents-section span4">
     <div class="create-doc-block" style="display:none;">
@@ -43,7 +34,7 @@
       <!-- list of all the user's documents -->
       <% for (var i = 0; i < userDocuments.length; i++) { %>
        <li data-doc-id="<%= userDocuments[i].id %>">
-	<a style="float:left;clear:both" onclick="docs_manager.openDoc('<%= userDocuments[i].id %>');$(this).closest('li').addClass('active').siblings('li').removeClass('active');" href="javascript:void(0);"><%= userDocuments[i].name %></a>
+	<a style="float:left;clear:both" href="/document/<%= userDocuments[i].id %>" ><%= userDocuments[i].name %></a>
 	<div class="btn-group pull-right">
 	  <% if (userDocuments[i].readAccess) { %>
 	  <button disabled class="btn">Read</button>
