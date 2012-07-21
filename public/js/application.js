@@ -124,6 +124,9 @@ function DocsManager() {
 
 		// close the createDocView
 		docs_manager.closeCreateDocView();
+
+		// hide delete buttons in case they were previously shown
+		docs_manager.hideDeleteButtons();
 	    }
 	});
     };
@@ -160,15 +163,19 @@ function DocsManager() {
 	    }
 	    currentDoc = doc; // store doc object	    	    
 
-	    var userDoc = onloadDoc;
+	    var userDoc = onloadDoc
+	    , writeAccess = userDoc.writeAccess == "true";
 	    
 	    // make editor writeable if user has write permission on document
-	    if (userDoc.writeAccess) {
+	    if (writeAccess) {
 		editor.setReadOnly(false);
 	    } else {
 		editor.setReadOnly(true);
 	    }
 	    
+	    // update "last saved" info box
+	    updateLastSavedInfo(jQuery.timeago(new Date(userDoc.lastSaved)));
+
 	    // load document text here
 	    if (doc.created) {
 		doc.insert(0, userDoc.text);
@@ -582,6 +589,8 @@ var domTargets = {
     , showMessagesBlock: Handlebars.compile($("#messages-for-user").html())
     , requestAccessBlock: Handlebars.compile($("#request-access-modal").html())
     , bodySecondContainer: "div.second-container"
+    , lastSavedSpan: "#header #last-saved-time"
+    , currentUserName: "#current-user-name"
 };
 
 
@@ -589,6 +598,14 @@ var domTargets = {
 // ================ Helper functions =============
 var reloadHome = function() {
     document.location.href = '/';
+};
+
+/**
+ * updateLastSavedInfo ->
+ * updates the "last saved" display time 
+ */
+var updateLastSavedInfo = function(timeText) {
+    $(domTargets.lastSavedSpan).html(timeText).closest("small").show();
 };
 
 /**
@@ -742,7 +759,7 @@ socket.on("changedDocument", function(docString) {
     
     // get my current username
     
-    if (document.forUser !== $("#current-user-name").text().trim()) {
+    if (document.forUser !== $(domTargets.currentUserName).text().trim()) {
 	return;
     }
     
@@ -770,7 +787,7 @@ socket.on("changedDocument", function(docString) {
 socket.on("newMessage", function(messageStr) {
     var message = JSON.parse(messageStr);
     
-    if (message.toUser !== $("#current-user-name").text().trim()) {
+    if (message.toUser !== $(domTargets.currentUserName).text().trim()) {
 	return;
     }
     
@@ -780,6 +797,15 @@ socket.on("newMessage", function(messageStr) {
 			+ " about the document, " + message.documentName + "."
 			+ " Check your mail for more details!");
     updateAlerts(response);
+});
+
+// handle the savedDocument event 
+socket.on("savedDocument", function(messageStr) {
+    var message = JSON.parse(messageStr);
+
+    if (message.sharesWith.indexOf($(domTargets.currentUserName).text().trim()) != -1) {
+	updateLastSavedInfo(jQuery.timeago(new Date(message.lastModified)));
+    }
 });
 
 // =================================================================================

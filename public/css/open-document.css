@@ -1,3 +1,21 @@
 .back-to-documents-listing {
     margin: 20px;
 }
+
+.doc-meta-data {
+    padding: 10px; 
+    margin-top: 50px;
+    float: right;
+    padding-right: 0;
+    color: #111;
+    text-align: center;
+    background-color: #888;
+}
+
+#last-saved-time-parent {
+    margin-right: 20px;
+}
+
+.container.second-container {
+    width: 1200px;
+} 

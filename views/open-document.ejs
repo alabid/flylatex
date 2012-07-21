@@ -15,7 +15,10 @@
       <div id="htext">
 	Editing&nbsp;
 	<b class="current-doc" data-doc-id="<%= userDocument.id %>" id="docname"><%= userDocument.name %></b>
-	<b><a class="save-document-link" href="javascript:void(0);" onclick="docs_manager.saveDoc('<%= userDocument.id %>', '<%= userDocument.name %>');">Save</a><b>
+	<b><a class="save-document-link" href="javascript:void(0);" onclick="docs_manager.saveDoc('<%= userDocument.id %>', '<%= userDocument.name %>');">Save</a></b>
+	<small id="last-saved-time-parent" style="display:none;" class="pull-right">
+	  Last Saved <span id="last-saved-time"></span>
+	</small>  
       </div>
     </div>
     <div id="doc-area">

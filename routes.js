@@ -1281,6 +1281,15 @@ exports.saveDocument = function(req, res) {
 	// save the document
 	doc.save();
 
+	var savedDocMessage = {
+	    "sharesWith" : openDocuments[documentId]
+	    , "lastModified" : (newLine ? newLine.lastModified : new Date())
+	};
+
+	// send a message to all users that are currently viewing the saved doc
+	io.sockets.volatile.emit("savedDocument", JSON.stringify(savedDocMessage));
+
+
 	// after save
 	response.code = 200;
 	response.infos.push("Successfully saved the document");
