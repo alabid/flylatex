@@ -22,10 +22,244 @@ function DocsManager() {
     // ========= Global variables here ==========
     var currentDoc = null
     , oldDoc = null
-    , versionNum = 0;
+    , versionNum = 0
+    , data = {
+	currentPage : 0
+	, logPages : []
+	, prevNextLogsHTML : "<div style='margin-bottom: 20px;'><button title='Last Page' class='btn' onclick='docs_manager.loadLogsPreviousPage();' style='margin-right: 20px;'><i class='icon-arrow-left'></i></button><button title='Next Page' class='btn' onclick='docs_manager.loadLogsNextPage();'><i class='pull-right icon-arrow-right'></i></button></div><div class='main-content'>"
+	, docOptions : null
+    };
+
+    /**
+     * init ->
+     * initialize DocsManager
+     */
+    this.init = function() {
+	if (document.location.href.indexOf("document") != -1) {
+	    $(domTargets.viewLogsButton).clickover({width: 500});
+	}
+    };
 
     // ==========================================
 
+    /**
+     * sharePDFDoc ->
+     * @param documentId : id of document to share
+     * @param documentName : name of document to share
+     */
+    this.sharePDFDoc = function(documentId, documentName) {
+	// open dialog with url only if user
+	// selects to make the pdf public:
+	// and only if user has 'share' access
+
+	// then give a url for sharing
+	// user should be also be able to turn the 'share' pdf button
+    };
+
+    /**
+     * changeScale
+     * @param scale : num to change scale to
+     */
+    this.changeScale = function(newScale) {
+	// change scale here
+	data.docOptions.scale = parseFloat(newScale);
+
+	// re-render the page
+	renderPage(data.docOptions.pageNum);
+    };
+    
+    /**
+     * compileAndRender ->
+     * compiles the currently displayed latex file
+     * into pdf and renders the pdf
+     * @param id : id of document to compile and render
+     */
+    this.compileAndRender = function(documentId, documentName) {
+	// first try to save the current document being displayed
+	$.ajax({
+	    type: "POST"
+	    , data: {"documentId" : documentId
+		     , "documentName" : documentName
+		     , "documentText": currentDoc.getText()}
+	    , url: "/savedoc"
+	    , success: function(response) {
+		// update alerts
+		updateAlerts(response);
+
+		if (response.errors.length > 0) {
+		    return;
+		}
+
+		// if no errors encountered, 
+		// then try to compile the document
+		$.ajax({
+		    type: "POST"
+		    , data: {"documentId": documentId
+			     , "documentName" : documentName}
+		    , url: "/compiledoc"
+		    , success: function(response) {
+			// update alerts
+			updateAlerts(response);
+			console.log(response);
+
+			// update logs for most recent pdf compile
+			// if any errors found in the log, then display
+			// error in compile message to user
+			isError = !updateLogs(response.logs);
+			if (response.errors.length > 0) {
+			    return;
+			}
+
+			// PDFJS.disableWorker = true;
+			PDFJS.workerSrc = "/js/pdf.js";
+			if (!isError) {
+			    data.docOptions = {
+				pdfDoc : null
+				, pageNum : 1 // start by rendering page 1
+				, scale : 1.0 // default scale of page
+				, canvas : document.getElementById("the-canvas")
+				, ctx : document.getElementById("the-canvas").getContext("2d")
+			    };
+
+
+			    // Asynchronously download PDF as an ArrayBuffer
+			    PDFJS.getDocument("http://"+document.location.host+response.compiledDocURI).then(function(_pdfDoc){
+				data.docOptions.pdfDoc = _pdfDoc;
+
+				renderPage(data.docOptions.pageNum);
+			    });
+			}
+		    }
+		});
+	    }
+	});
+    };
+
+    /**
+     * updateLogs ->
+     * @param logText : text of logs
+     *
+     * @return true if successful. false if not.
+     */
+    var updateLogs = function(logText) {	
+	var lines = logText.split("\n")
+	, noError = true
+	, LINES_PER_PAGE = 10
+	, i = 0;
+	
+	// apportion log pages
+	while (i*LINES_PER_PAGE < lines.length) {
+	    data.logPages.push(lines.slice(i*LINES_PER_PAGE, (i+1)*LINES_PER_PAGE).join("<br/>"));
+	    i++;
+	}
+
+	// update contents on the 'view logs' button
+	// with the last page
+	loadLogPage(data.logPages[data.currentPage]);
+	
+	for (var i = 0; i < lines.length; i++) {
+	    // if '!' in line, there's an error
+	    if (lines[i].indexOf("!") != -1) {
+		noError = false;
+	    }
+	}
+	return  noError;
+    };
+
+    /**
+     * Get page info from document, resize canvas accordingly, and render page
+     *
+     * @param num : the page number to render
+     */
+    var renderPage = function(num) {
+	// get document options
+	var docOptions = data.docOptions;
+	
+	// Using promise to fetch the page
+	docOptions.pdfDoc.getPage(num).then(function(page) {
+            var viewport = page.getViewport(docOptions.scale);
+            docOptions.canvas.height = viewport.height;
+            docOptions.canvas.width = viewport.width;
+	    
+            // Render PDF page into canvas context
+            var renderContext = {
+		canvasContext: docOptions.ctx,
+		viewport: viewport
+            };
+            page.render(renderContext);
+	});
+
+	// Update page counters
+	document.getElementById("page_num").textContent = docOptions.pageNum;
+	document.getElementById("page_count").textContent = docOptions.pdfDoc.numPages;
+    }
+    
+    /**
+     * loadLogPage
+     * @param logText : text of log
+     */
+    var loadLogPage = function(logText) {
+	// update 'log text', prepending some controls
+	$(domTargets.viewLogsButton).attr("data-content"
+					  , data.prevNextLogsHTML+logText+"</div>");
+	// also update log contents if displayed
+	$(domTargets.popoverContent).html(logText+"</div>");
+    };
+    
+    /**
+     * goPreviousPage ->
+     * go the previous page
+     *
+     */
+    this.goPreviousPage = function() {
+	console.log("going to previous page");
+	// get document options
+	var docOptions = data.docOptions;
+	
+	if (docOptions.pageNum <= 1)
+            return;
+	docOptions.pageNum--;
+	renderPage(docOptions.pageNum);
+    }
+
+    /**
+     * Go to next page
+     */
+    this.goNextPage = function() {
+	console.log("going to next page");
+	// get document options
+	var docOptions = data.docOptions;
+
+	
+	if (docOptions.pageNum >= docOptions.pdfDoc.numPages)
+            return;
+	docOptions.pageNum++;
+	renderPage(docOptions.pageNum);
+    }
+
+    
+
+    /**
+     * Load next log page, if any
+     */
+    this.loadLogsNextPage = function() {	
+	if (data.currentPage+1 < data.logPages.length) {
+	    data.currentPage++;
+	    
+	    loadLogPage(data.logPages[data.currentPage]);
+	}
+    };
+    
+    /**
+     * Load previous log page, if any
+     */
+    this.loadLogsPreviousPage = function() {	
+	if (data.currentPage-1 > 0) {
+	    data.currentPage--;
+	    
+	    loadLogPage(data.logPages[data.currentPage]);
+	}
+    };
 
     /*
      * reqReadAccess
@@ -131,7 +365,33 @@ function DocsManager() {
 	});
     };
 
+    /**
+     * showCompilerView ->
+     * shrink editor and expand compiler view
+     * @param jButton : jQuery object of button
+     */
+    this.showCompilerView = function(jButton) {
+	// hide compiler text
+	jButton.text("Hide PDF View")
+	    .attr("onclick", "docs_manager.hideCompilerView($(this));");
+	$("#editor, #header").css("width", "600px");
+	// show compiler view
+	$('.compiler-view').slideLeftShow();
+    };
 
+    /**
+     * hideCompilerView ->
+     * expand editor and collapse compiler view
+     */
+    this.hideCompilerView = function(jButton) {
+	// show compiler text
+	jButton.text("Show PDF View")
+	    .attr("onclick", "docs_manager.showCompilerView($(this));");
+	$("#editor, #header").css("width", "1200px");
+	// hide compiler view
+	$('.compiler-view').slideRightHide();
+    };
+    
     /*
      * this.openDocOnLoad - 
      * open the document when you load the page
@@ -162,6 +422,9 @@ function DocsManager() {
 		oldDoc.close();
 	    }
 	    currentDoc = doc; // store doc object	    	    
+
+	    // compile and render document
+	    // docs_manager.compileAndRender(onloadDoc.id, onloadDoc.name);
 
 	    var userDoc = onloadDoc
 	    , writeAccess = userDoc.writeAccess == "true";
@@ -252,7 +515,6 @@ function DocsManager() {
      */
     this.saveDoc = function(docId, docName) {
 	// save the document
-
 	$.ajax({
 	    type: "POST"
 	    , data: {"documentId" : docId
@@ -264,23 +526,6 @@ function DocsManager() {
 		updateAlerts(response);
 	    }
 	});
-	
-	
-	/*
-	// load Document object
-	
-	*/
-	
-	// load Document lines (in one document); client knows nothing
-	// about the document lines
-	// and place in text area
-	
-	// update current doc label
-	// load userDocument
-	// domTargets.currentDocLabel.html(userDocument.name);
-	// domTargets.currentDocLabel.attr("data-doc-id", userDocument._id);
-	// domTargets.currentDocLabel.attr("onclick"
-	//                                ,"docs_manager.openDoc("+userDocument._id+")");
     };
 
     /*
@@ -551,6 +796,7 @@ function UserMessages() {
 	deleteMessage(fromUser, documentId, access);
     };
 
+
     /**
      * deleteMessage -
      * delete the message from messages collection
@@ -570,11 +816,6 @@ function UserMessages() {
     }
 };
 
-// load instances of class into variables attached to the
-// window
-window["user_manager"] = new UserManager();
-window["docs_manager"] = new DocsManager();
-window["user_messages"] = new UserMessages();
 /*
  * Global Variables
  */
@@ -591,7 +832,19 @@ var domTargets = {
     , bodySecondContainer: "div.second-container"
     , lastSavedSpan: "#header #last-saved-time"
     , currentUserName: "#current-user-name"
+    , viewLogsButton : ".pdf-render #view-logs"
+    , popoverContent :  ".popover-content p .main-content"
 };
+
+
+// load instances of class into variables attached to the
+// window
+window["user_manager"] = new UserManager();
+
+window["docs_manager"] = new DocsManager();
+docs_manager.init(); // initialize 'docs_manager'
+
+window["user_messages"] = new UserMessages();
 
 
 
@@ -774,10 +1027,22 @@ socket.on("changedDocument", function(docString) {
 	    
 	    // redisplay documents
 	    $(domTargets.documentList).empty();
-
+	    var writeAccess;
 	    response.userDocuments.forEach(function(item, index) {
 		$(domTargets.documentList)
 		    .append(domTargets.singleDocEntry(item));
+
+		if (typeof item.writeAccess == "string") {
+		    writeAccess = (item.writeAccess == "true");
+		} else {
+		    writeAccess = item.writeAccess;
+		}
+
+		// if write access is needed by the person who's currently
+		// making changes to a document, then give the user access
+		if (writeAccess && $("#docname").attr("data-doc-id").trim() == item.id) {
+		    editor.setReadOnly(false);   
+		}
 	    });
 	}
     });

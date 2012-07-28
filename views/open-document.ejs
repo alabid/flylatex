@@ -1,5 +1,5 @@
 <div class="row">
-  <div class="span7">
+  <div class="span6">
     <div class="documents-section-errors">
       <!-- put dynamic errors onhere -->
       
@@ -9,6 +9,9 @@
       <button class="btn btn-primary" onclick="document.location.href='/';">
 	<i class="icon-backward"></i>
 	Back to Documents Listing
+      </button>
+      <button class="btn btn-primary" onclick="docs_manager.showCompilerView($(this));">
+	Show PDF View
       </button>
     </div>
     <div id="header">
@@ -23,6 +26,42 @@
     </div>
     <div id="doc-area">
       <div id="editor">
+      </div>
+    </div>
+  </div>
+  <div class="compiler-view span6" style="display:none;float:right;">
+    <!-- button to compile and display pdf document -->
+    <button class="btn btn-primary" onclick="docs_manager.compileAndRender('<%= userDocument.id %>', '<%= userDocument.name %>');">
+      <i class="icon-film"></i>
+      Compile and Render
+    </button>
+    <% if (userDocument.canShare)  { %>
+    <button class="btn btn-primary pull-right" onclick="docs_manager.sharePDFDoc('<%= userDocument.id %>', '<%= userDocument.name %>');">
+      <i class="icon-share"></i>
+      Share PDF
+    </button>
+    <% } %>
+    <div class="pdf-render">
+      <button class="btn" id="prev" onclick="docs_manager.goPreviousPage();">
+	<i class="icon-arrow-left"></i>
+	Previous
+      </button>
+      <button class="btn" id="next" onclick="docs_manager.goNextPage();">
+	<i class="pull-right icon-arrow-right" style="margin-left:3px;"></i>
+	Next
+      </button>
+      <a href="javascript:void(0);" rel="clickover" data-placement="left" data-original-title="Compilation Logs" id="view-logs" title="View Logs" class="btn btn-primary pull-right">
+	<i class="icon-road"></i>
+	View Logs
+      </a>
+      <span>Page: <span id="page_num"></span> / <span id="page_count"></span></span>
+      <span>Scale: <input onkeyup="docs_manager.changeScale($(this).val());" class="input-mini" type="text" placeholder="Scale" value="1"></span
+      <div>
+	<div id="pdf-canvas">
+	<canvas id="the-canvas">
+	  No PDF
+	</canvas>
+	</div>
       </div>
     </div>
   </div>

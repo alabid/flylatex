@@ -1,5 +1,5 @@
-.back-to-documents-listing {
-    margin: 20px;
+.back-to-documents-listing button {
+    margin-bottom: 20px;
 }
 
 .doc-meta-data {
@@ -19,3 +19,23 @@
 .container.second-container {
     width: 1200px;
 } 
+
+.pdf-render {
+    background-color: #EEE;
+    padding: 5px;
+    -moz-border-radius: 15px;
+    -webkit-border-radius: 15px;
+    border-radius: 15px;
+    margin-top: 10px;
+    height: 700px;
+    overflow: scroll;
+}
+
+#pdf-canvas {
+    background: #fff;
+    overflow: scroll;
+    margin-top: 10px;
+}
+
+/*
+style="border:1px solid black; margin-top:2px;"*/

@@ -10,7 +10,7 @@
     <!-- Le styles -->
     <link href="/css/bootstrap.css" rel="stylesheet"/>
     <link href="/css/bootstrap-responsive.css" rel="stylesheet"/>
-    
+    <link rel="shortcut icon" href="http://vidmuster.com/favicon.ico" type="image/x-icon">    
 
     <!-- style.css - css for all fly latex pages -->
     <link href="/css/style.css" rel="stylesheet"/>
@@ -20,7 +20,8 @@
     <% } %>
     <style>
       body {
-        padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+      padding-top: 60px;
+      /* 60px to make the container go all the way to the bottom of the topbar */
       }
     </style>
 
@@ -29,13 +30,17 @@
       <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
 
-    <!-- load some js scripts here -->
+    <!-- load some jQuery components here -->
     <script type="text/javascript" src="/js/jquery.min.js"></script>
+    <script src="/js/jquery.effects.core.js"></script>
+    <script src="/js/jquery.effects.slide.js"></script>
+    
+    <!-- load some js scripts here -->
     <script type="text/javascript" src="/js/bootstrap.js"></script>
     <script type="text/javascript" src="/js/handlebars.js"></script>
     <script type="text/javascript" src="/js/bootbox.min.js"></script>
     <script type="text/javascript" src="/js/jquery.timeago.js"></script>
-
+    
     <!-- include socket.io here -->
     <script type="text/javascript" src="/socket.io/socket.io.js"></script>
     
@@ -147,10 +152,20 @@
     <script type="text/javascript" src="/js/ace/src/ace.js"></script>
     <script type="text/javascript" src="/js/ace/src/mode-latex.js"></script>
     <script type="text/javascript" src="/js/ace/src/theme-idle_fingers.js"></script>
+
     <!-- load sharejs scripts to make the ace editor function -->
     <script type="text/javascript" src="/channel/bcsocket.js"></script>
     <script type="text/javascript" src="/share/share.js"></script>
     <script type="text/javascript" src="/share/ace.js"></script>
+
+    <!-- load 'bootstrap clickover' here -->
+    <script type="text/javascript" src="/js/bootstrapx-clickover.js"></script>
+
+    <!-- load 'jquery transit' here -->
+    <script type="text/javascript" src="/js/jquery.transit.min.js"></script>
+
+    <!-- Use latest PDF.js build from Github -->
+    <script type="text/javascript" src="/js/pdf.js"></script>
 
     <script type="text/javascript" src="/js/ace-locals.js"></script>
     <script type="text/javascript">

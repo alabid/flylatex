@@ -11,8 +11,16 @@
 
 var mongoose = require("mongoose")
 , Schema = mongoose.Schema
+, ObjectId = Schema.ObjectId
 , app = require("./app")
-, io = require('socket.io').listen(app);
+, io = require("socket.io").listen(app)
+, temp = require("temp")
+, fs = require("fs")
+, util = require("util")
+, path = require("path")
+, exec = require("child_process").exec
+, http = require("http")
+, request = require("request");
 
 
 require("./models"); // import the models here
@@ -25,7 +33,8 @@ var User = mongoose.model("User")
 , Document = mongoose.model("Document")
 , DocumentLine = mongoose.model("DocumentLine")
 , DocPrivilege = mongoose.model("DocPrivilege")
-, Message = mongoose.model("Message");
+, Message = mongoose.model("Message")
+, PDFDoc = mongoose.model("PDFDoc");
 
 
 // ================ GLOBAL variables here =============
@@ -241,6 +250,14 @@ exports.processSignUpData = function(req, res) {
 	isError = true;
     }
 
+    // make sure password == confirmPassword
+    console.log(newUser);
+    if (newUser.password != newUser.confirmPassword) {
+	errors["passwordNoMatch"] = "The Confirm Password should match the initial password entry";
+	isError = true;
+    }
+
+
     // make sure email is valid
     if (!(/^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/.test(newUser.email))) {
 	errors["emailInvalid"] = "Enter a valid email address";
@@ -275,7 +292,7 @@ exports.processSignUpData = function(req, res) {
 		  } else {
 		      // save the user
 		      var newFlyUser = new User();
-		      for (key in newUser) {
+		      for (var key in newUser) {
 			  newFlyUser[key] = newUser[key];
 		      }
 		      newFlyUser.documentsPriv = [];
@@ -291,7 +308,7 @@ exports.processSignUpData = function(req, res) {
 		      
 		      // load user here
 		      var loadedUser = loadUser(newFlyUser);
-		      for (key in loadedUser) {
+		      for (var key in loadedUser) {
 			  req.session[key] = loadedUser[key];
 		      }
 		      
@@ -815,6 +832,7 @@ exports.grantAccess = function(req, res) {
 	    if (priv == 7) {
 		canShare = true;
 
+		// give user R, W, X access
 		giveUserSharePower(req.body.userToGrant, req.body.documentId);
 	    }
 
@@ -967,6 +985,9 @@ exports.acceptAccess = function(req, res) {
 	if (priv == 7) {
 	    canShare = true;
 	    
+	    // give user share power
+	    // a user can only get share access when he's given access of 7
+	    // which corresponds to R, W, X
 	    giveUserSharePower(req.session.currentUser, req.body.documentId);
 	}
 	
@@ -1082,7 +1103,7 @@ exports.reloadSession = function(req, res) {
 	User.findOne({userName: req.session.currentUser}, function(err, user) {
 	    // reload user
 	    var loadedUser = loadUser(user);
-	    for (key in loadedUser) {
+	    for (var key in loadedUser) {
 		req.session[key] = loadedUser[key];
 	    }
 	    
@@ -1093,6 +1114,141 @@ exports.reloadSession = function(req, res) {
 	});
     }
 };
+
+/**
+ * exports.servePDF ->
+ * @param req : request Object
+ * @param res : result Object
+ *
+ */
+exports.servePDF = function(req, res) {
+    var documentId = req.params.documentId
+    , options;
+
+    // find the pdf
+    console.log(documentId);
+    PDFDoc.findOne({forDocument:documentId}, function(err, doc) {
+	if (err || !doc) {
+	    req.flash("error", "PDF not found or an error occured while reading the pdf");
+	    res.redirect("back");
+	    return;
+	}
+
+	// write pdf file to user
+	request.get(doc.pdf.original.defaultUrl).pipe(res);
+    });
+};
+
+/**
+ * exports.compileDoc
+ * @param req : request object
+ * @param res : response object
+ */
+exports.compileDoc = function(req, res) {
+    // initialize the 'response' JS object to send back
+    var response = {infos:[], errors: [], logs:"", compiledDocURI:null}
+    , documentId = req.body.documentId;
+
+    if (!(req.session.currentUser && req.session.isLoggedIn)) {
+	response.errors.push("You are not logged in");
+	res.json(response);
+	return;
+    } 
+    
+    // first load the text of the document from the database
+    Document.findOne({_id:documentId}, function(err, doc) {
+	if (err || !doc) {
+	    response.errors.push("An Error Occured while trying to open the document");
+	    res.json(response);
+	    return;
+	}
+
+	// assemble the document lines
+	var docLines = []
+	, lastModified
+	, docText;
+
+	// get document lines
+	doc.lines.forEach(function(item, index) {
+	    docLines.push(item.data.toString());
+	    
+	    if (!lastModified || lastModified < item.lastModified) {
+		lastModified = item.lastModified;
+	    }
+	});
+
+	// get the document text
+	docText = docLines.join();
+
+	// make temporary directory to create and compile latex pdf
+	temp.mkdir("pdfcreator", function(err, dirPath){
+	    var inputPath = path.join(dirPath, documentId+".tex");
+	    
+	    fs.writeFile(inputPath, docText, function(err) {
+		if (err) {
+		    response.errors.push("An error occured even before compiling");
+		    res.json(response);
+		    return;
+		}
+		process.chdir(dirPath);
+
+		// compile the document (or at least try)
+		// redirect the stdin, stderr results of compilation
+		// since the results of compilation will eventually be
+		// written to the log file
+		exec("pdflatex -interaction=nonstopmode "+ inputPath +" > /dev/null 2>&1", function(err) {
+		    // store the logs for the user here
+		    fs.readFile(path.join(dirPath, documentId+".log"), function(err, data){
+			if (err) {
+			    response.errors.push("Error while trying to read logs.");
+			}
+			
+			// store the 'logs' from the compile
+			response.logs = data.toString();
+			
+			var errorStr = "An error occured before or during compilation";
+			if (err) {
+			    console.log(err);
+			    response.errors.push(errorStr);
+			    res.json(response);
+			    return;
+			}
+
+			// store the compile pdf document in the cloud
+
+			// create new PDFDoc
+			var newpdf = new PDFDoc();
+			newpdf.forDocument = documentId;
+			newpdf.title = documentId+".pdf";
+			
+			newpdf.attach("pdf", {path:path.join(dirPath, documentId+".pdf")} , function(err) {
+			    if (err) {
+				console.log(err);
+				response.errors.push(errorStr);
+				res.json(response);
+				return;
+			    }
+			    newpdf.save(function(err) {
+				if (err) {
+				    console.log(err);
+				    response.errors.push(errorStr);
+				    res.json(response);
+				    return;
+				}
+				response.infos.push("Successfully compiled " + req.body.documentName);
+				// make the compiledDocURI
+				response.compiledDocURI = "/servepdf/"+documentId;					      
+				// send response back to user
+				res.json(response);		
+			    });
+			});
+		    });
+		});
+	    });
+	});
+    });
+};
+
 
 /**
  * exports.addNewDocument -
@@ -1368,8 +1524,9 @@ var createNewDocument = function(docName, currentUser) {
 		     , lines: [newDocLine]
 		     , lastModified: new Date()
 		     , usersWithShareAccess: [currentUser]
+		     , documentType: 0 // latex document
 		    };
-
+    
     for (var key in newDocObj) {
 	newDoc[key] = newDocObj[key];
     }

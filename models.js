@@ -10,7 +10,8 @@
 var crypto = require("crypto")
 , mongoose = require("mongoose")
 , Schema = mongoose.Schema
-, ObjectId = Schema.ObjectId;
+, ObjectId = Schema.ObjectId
+, attachments = require("mongoose-attachments");
 
 var DocPrivilege = new Schema ({
     access: {type: Number
@@ -94,9 +95,44 @@ var Document = new Schema ({
     , createdAt: {type: Date
 		  , default: new Date()
 		 }
+    , documentType: Number 
     , usersWithShareAccess: [String] // store userNames of users with full access to doc
 });
 
+var PDFDoc = new Schema({
+    title: String
+    , forDocument: ObjectId
+    , isPublic : {type: Boolean
+		  , default: false}
+    // ==================================================================
+    // isPublic should be set to true only when you want to share
+    // to the public. You must have 'share' access to grab the 'embed' url
+
+    // plus, the only time that you will need to check or use the variable
+    // isPublic is when you are loading a PDF
+    // ==================================================================
+});
+
+PDFDoc.plugin(attachments, {
+    directory: "pdfs"
+    , storage: {
+	providerName: "s3"
+	, options: {
+	    key: "AKIAIXW422S2UJED3V5A"
+	    , secret: "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"
+	    , bucket: "fly-latex"
+	}
+    }
+    , properties: {
+	pdf: {
+	    styles: {
+		original: {
+		    // keep the original file
+		}
+	    }
+	}
+    }
+});
 
 /*
  * virtual methods here
@@ -155,3 +191,4 @@ mongoose.model("Document", Document);
 mongoose.model("DocumentLine", DocumentLine);
 mongoose.model("DocPrivilege", DocPrivilege);
 mongoose.model("Message", Message);
+mongoose.model("PDFDoc", PDFDoc);

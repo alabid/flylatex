@@ -104,6 +104,13 @@ app.get('/document/:documentId', routes.preIndex, routes.openDocument);
 // save the text for a document
 app.post('/savedoc', routes.saveDocument);
 
+// compile the latex document
+app.post('/compiledoc', routes.compileDoc);
+
+// for serving pdf's for documents with specific id's
+app.get('/servepdf/:documentId', routes.servePDF);
+
+
 /** end of ROUTES */
 
 
