@@ -26,7 +26,7 @@ var mongoose = require("mongoose")
 require("./models"); // import the models here
 
 // connect to the flydb app db
-mongoose.connect("mongodb://localhost/flydb");
+mongoose.connect(process.env.MONGOHQ_URL || "mongodb://heroku:heroku@staff.mongohq.com:10075/app5158755");
 
 // import the models here
 var User = mongoose.model("User")
