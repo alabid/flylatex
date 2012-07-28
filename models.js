@@ -118,9 +118,9 @@ PDFDoc.plugin(attachments, {
     , storage: {
 	providerName: "s3"
 	, options: {
-	    key: "AKIAIXW422S2UJED3V5A"
-	    , secret: "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"
-	    , bucket: "fly-latex"
+	    key: "<put key here>"
+	    , secret: "<put secret here>"
+	    , bucket: "<put bucket here>"
 	}
     }
     , properties: {
