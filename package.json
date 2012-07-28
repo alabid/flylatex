@@ -3,14 +3,18 @@
   , "version": "0.0.1"
   , "private": true
   , "dependencies": {
-      "express": "2.5.0"
-    , "share" : "0.5.0"
+      "express": "2.x.x"
+    , "share" : "*"
     , "temp" : "*"
     , "mongoose" : "*"
-
     , "socket.io" : "*"
     , "request" : "*"
     , "temp" : "*"
     , "connect-mongo" : "*"
+    , "mongoose-attachments": "*"
   }
+  , "engines" : {
+    "node" : "0.8.x"
+    , "npm" : "1.1.x"
+  } 
 }
