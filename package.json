@@ -7,7 +7,7 @@
     , "jade": ">= 0.0.1"
     , "share" : "0.5.0"
     , "temp" : "*"
-    , "mongoose" : "1.1.13"
+    , "mongoose" : "1.1.x"
     , "mongoose-attachments" : "*"
     , "socket.io" : "*"
     , "request" : "*"
