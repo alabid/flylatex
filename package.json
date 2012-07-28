@@ -4,18 +4,13 @@
   , "private": true
   , "dependencies": {
       "express": "2.5.0"
-    , "jade": ">= 0.0.1"
     , "share" : "0.5.0"
     , "temp" : "*"
     , "mongoose" : "*"
-    , "mongoose-attachments" : "*"
+
     , "socket.io" : "*"
     , "request" : "*"
     , "temp" : "*"
-    , "connect-mongo" : "0.1.9"
-  }
-  , "engines" : {
-      "node" : "0.8.x",
-      "npm": "1.1.x"
+    , "connect-mongo" : "*"
   }
 }
