@@ -12,6 +12,7 @@ pids
 logs
 results
 
+configs.js
 todos
 
 node_modules

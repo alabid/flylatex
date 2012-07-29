@@ -5,7 +5,6 @@
  *
  */
 
-
 var express = require('express')
 , app = module.exports = express.createServer()
 , sharejs = require('share').server

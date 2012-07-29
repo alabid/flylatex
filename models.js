@@ -11,7 +11,10 @@ var crypto = require("crypto")
 , mongoose = require("mongoose")
 , Schema = mongoose.Schema
 , ObjectId = Schema.ObjectId
-, attachments = require("mongoose-attachments");
+, attachments = require("mongoose-attachments")
+
+// load configurations here
+, configs = require('./configs');
 
 var DocPrivilege = new Schema ({
     access: {type: Number
@@ -114,13 +117,13 @@ var PDFDoc = new Schema({
 });
 
 PDFDoc.plugin(attachments, {
-    directory: "pdfs"
+    directory: configs.attachments.directory
     , storage: {
-	providerName: "s3"
+	providerName: configs.attachments.providerName
 	, options: {
-	    key: "<put key here>"
-	    , secret: "<put secret here>"
-	    , bucket: "<put bucket here>"
+	    key: configs.attachments.key
+	    , secret: configs.attachments.secret
+	    , bucket: configs.attachments.bucket
 	}
     }
     , properties: {

@@ -1,14 +1,34 @@
-FLY LATEX
-=========
+FLYLATEX
+========
 
-FLY LATEX: A Real time collaborative editor in node-js. Pre-alpha.
+FlyLatex is a Real Time Collaborative Environment for LaTeX built in nodejs.
+It includes a beautiful LaTeX ACE Editor and a PDF renderer. 
 
-AUTHORS
--------
+Setup
+-----
+To install FlyLatex, first clone the repository: `git clone https://github.com/alabid/flylatex.git`
+
+To use FlyLatex, you must have `node` and `npm` installed. So if you haven't already
+installed node (for nodejs) and npm (the node package manager), do so before moving on.
+
+`cd` into the 
+
+Usage
+-----
+
+Feedback, Bugs, Suggestions
+---------------------------
+
+
+
+AUTHOR
+------
 Daniel Alabi
 
 MIT Open Source License
 -----------------------
+
+Copyright &copy 2012 Daniel Alabi
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 

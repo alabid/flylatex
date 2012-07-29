@@ -14,6 +14,10 @@ var mongoose = require("mongoose")
 , ObjectId = Schema.ObjectId
 , app = require("./app")
 , io = require("socket.io").listen(app)
+
+// load configurations here
+, configs = require("./configs")
+
 , temp = require("temp")
 , fs = require("fs")
 , util = require("util")
@@ -23,10 +27,10 @@ var mongoose = require("mongoose")
 , request = require("request");
 
 
-require("./models"); // import the models here
-
 // connect to the flydb app db
-mongoose.connect("mongodb://localhost:5000/flydb");
+mongoose.connect(configs.db.url);
+
+require("./models"); // import the models here
 
 // import the models here
 var User = mongoose.model("User")
@@ -99,6 +103,7 @@ exports.preIndex = function(req, res, next) {
 	next();
     } else if (req.body.username && req.body.username.length > 0
 	       && req.body.password && req.body.password.length > 0) {
+
 	// user's not logged in, but wants to log in
 	User.findOne({userName: req.body.username}
 		  , function(err, user) {
@@ -165,6 +170,7 @@ exports.index = function(req, res, err){
 
     req.session.userDocuments = (req.session.userDocuments == undefined ? [] :
 				 req.session.userDocuments);
+
 
     if (req.session.currentUser && req.session.isLoggedIn) {
 	// display the documents for user
@@ -251,7 +257,6 @@ exports.processSignUpData = function(req, res) {
     }
 
     // make sure password == confirmPassword
-    console.log(newUser);
     if (newUser.password != newUser.confirmPassword) {
 	errors["passwordNoMatch"] = "The Confirm Password should match the initial password entry";
 	isError = true;
@@ -1126,7 +1131,6 @@ exports.servePDF = function(req, res) {
     , options;
 
     // find the pdf
-    console.log(documentId);
     PDFDoc.findOne({forDocument:documentId}, function(err, doc) {
 	if (err || !doc) {
 	    req.flash("error", "PDF not found or an error occured while reading the pdf");
