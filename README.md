@@ -28,8 +28,8 @@ Setup
 To use FlyLatex, you must have `node`, `npm`, and `mongodb` installed. So if you haven't already installed node (for nodejs) and npm (the node package manager), 
 do so before moving on.
 
-Also, if you want to be able to store and render pdf's and not just edit your LaTeX
-files, then sign up for a cloud storage service like 
+Also, if you want to store and render pdf's and not just edit your LaTeX
+files, you must sign up for a cloud storage service like 
 [Amazon S3](http://aws.amazon.com/es/s3/). 
 Other providers should be accessible in the future.
 
@@ -71,7 +71,11 @@ the server via:
 
    web: node app.js
 
+You should see a command-line message telling you the port number on which the app lives. For example, I saw the message
 
+    20:38:10 web.1     | Express server listening on port 5000 in development mode
+    
+So I had to visit `http://localhost:5000`. Yours might be different. Watch out.
 
 Feedback, Bugs, Suggestions
 ---------------------------
