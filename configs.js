@@ -5,12 +5,12 @@ var config = {
     attachments : {
 	directory : "pdfs"
 	, providerName : "s3"
-	, key : "<your key here>" 
+	, key : "<your key here>"
 	, secret : "<your secret here>"
-	, bucket : "<your bucket name here>"
+	, bucket : "<your bucket here>"
     }
     , db : {
-	url : "<your mongodb db url" // for example: mongodb://localhost/flydb3"
+	url : "mongodb://localhost/flydb" // for example: mongodb://localhost/flydb3"
     }
 };
 

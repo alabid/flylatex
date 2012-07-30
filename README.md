@@ -25,13 +25,14 @@ FlyLatex gives you:
 Setup
 -----
 
-To use FlyLatex, you must have `node`, `npm`, and `mongodb` installed. So if you haven't already installed node (for nodejs) and npm (the node package manager), 
-do so before moving on.
+To use FlyLatex, you must have `node`, `npm`, `mongodb` installed. So if you haven't already installed all these, do so before moving on.
 
 Also, if you want to store and render pdf's and not just edit your LaTeX
 files, you must sign up for a cloud storage service like 
 [Amazon S3](http://aws.amazon.com/es/s3/). 
-Other providers should be accessible in the future.
+Other providers should be accessible in the future. In addition, you must 
+have the program `pdflatex` command line tool installed. If not, install
+it.
 
 To install FlyLatex, first clone the repository: `git clone https://github.com/alabid/flylatex.git`
 
