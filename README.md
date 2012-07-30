@@ -41,15 +41,15 @@ setup.
 
 	var config = {
   	    attachments : {
-	        directory : "pdfs"
-	   	, providerName : "<provider name here>" // for example "s3"
-	    	, key : "<your key here>"  // your access id key
-	    	, secret : "<your secret here>" // your s3 secret key
+	    	directory : "pdfs"
+		, providerName : "<provider name here>" // for example "s3"
+		, key : "<your key here>"  // your access id key
+		, secret : "<your secret here>" // your s3 secret key
 	    	, bucket : "<your bucket here>" // amazon s3 bucket name
    	    }
 	    , db : {
-	      url : "<your mongodb database url>" // for example: mongodb://localhost/flydb" 
-    	    }
+	      url : "<your mongodb database url>" // for example: mongodb://localhost/flydb"
+	    }
 	};
 
 Then run the command `npm install -d` to install all the dependencies for the
