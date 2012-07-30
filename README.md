@@ -1,29 +1,92 @@
-FLYLATEX
+FlyLatex
 ========
 
 FlyLatex is a Real Time Collaborative Environment for LaTeX built in nodejs.
 It includes a beautiful LaTeX ACE Editor and a PDF renderer. 
 
+FlyLatex gives you:
+
+* A Real Time Collaborative Code Editor
+
+* Real Time updates on status and privileges of Latex Documents
+
+* Easy way to Compile LaTeX to PDF Online
+
+* Easy LateX Debugging Online
+
+* Easy Manipulation of Compiled PDF
+
+* Easy Sharing of PDF
+
+* An Open Source product that's easy to Customize
+
+
+
 Setup
 -----
+
+To use FlyLatex, you must have `node`, `npm`, and `mongodb` installed. So if you haven't already installed node (for nodejs) and npm (the node package manager), 
+do so before moving on.
+
+Also, if you want to be able to store and render pdf's and not just edit your LaTeX
+files, then sign up for a cloud storage service like 
+[Amazon S3](http://aws.amazon.com/es/s3/). 
+Other providers should be accessible in the future.
+
 To install FlyLatex, first clone the repository: `git clone https://github.com/alabid/flylatex.git`
 
-To use FlyLatex, you must have `node` and `npm` installed. So if you haven't already
-installed node (for nodejs) and npm (the node package manager), do so before moving on.
+`cd` into the directory `flylatex`. Open the file `configs.js` with your favorite
+editor and edit the file to reflect your cloud storage setup and your database
+setup.
 
-`cd` into the 
+	var config = {
+  	    attachments : {
+	        directory : "pdfs"
+	   	, providerName : "<provider name here>" // for example "s3"
+	    	, key : "<your key here>"  // your access id key
+	    	, secret : "<your secret here>" // your s3 secret key
+	    	, bucket : "<your bucket here>" // amazon s3 bucket name
+   	    }
+	    , db : {
+	      url : "<your mongodb database url>" // for example: mongodb://localhost/flydb" 
+    	    }
+	};
+
+Then run the command `npm install -d` to install all the dependencies for the
+FlyLatex nodejs app. This should take only a few minutes.
 
 Usage
 -----
 
+You'd have to first start the `mongo` daemon using the command
+
+      mongod --dbpath <some mongodb path>
+
+`<some mongodb path>` could be `~/mongodb` or any other place you have a mongodb
+path.
+
+Then `cd` into the directory (if you aren't already there) and run the command
+ `foreman start`. This should invoke the `Procfile` in that directory and start 
+the server via:
+
+   web: node app.js
+
+
+
 Feedback, Bugs, Suggestions
 ---------------------------
 
+I'd really like your feedback, comments, and bug reports sent to me
+somehow preferably by filing an issue (github feature).
 
 
-AUTHOR
+Author
 ------
 Daniel Alabi
+
+Version
+-------
+0.5.0-Beta
 
 MIT Open Source License
 -----------------------
