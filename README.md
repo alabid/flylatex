@@ -69,7 +69,7 @@ Then `cd` into the directory (if you aren't already there) and run the command
  `foreman start`. This should invoke the `Procfile` in that directory and start 
 the server via:
 
-   web: node app.js
+    web: node app.js
 
 You should see a command-line message telling you the port number on which the app lives. For example, I saw the message
 
