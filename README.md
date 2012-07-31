@@ -20,7 +20,10 @@ FlyLatex gives you:
 
 * An Open Source product that's easy to Customize
 
+Screen Shots of the Internals of the FlyLatex application
+---------------------------------------------------------
 
+Check if out [here](http://alabidan.me/2012/07/31/flylatex-a-real-time-collaborative-environment-some-screen-shots-of-the-app/)
 
 Setup
 -----
@@ -77,6 +80,7 @@ You should see a command-line message telling you the port number on which the a
     20:38:10 web.1     | Express server listening on port 5000 in development mode
     
 So I had to visit `http://localhost:5000`. Yours might be different. Watch out.
+
 
 Feedback, Bugs, Suggestions
 ---------------------------
