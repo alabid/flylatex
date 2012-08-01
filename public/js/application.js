@@ -444,7 +444,7 @@ function DocsManager() {
 		doc.insert(0, userDoc.text);
 	    }
 	    
-	    doc.attach_ace(editor);	    
+	    doc.attach_ace(editor);
 	    
 	    oldDoc = doc;	    
 	});	     

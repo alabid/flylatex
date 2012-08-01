@@ -1208,7 +1208,7 @@ exports.compileDoc = function(req, res) {
 			}
 			
 			// store the 'logs' from the compile
-			response.logs = data.toString();
+			response.logs = (data ? data.toString() : "");
 			
 			var errorStr = "An error occured before or during compilation";
 			if (err) {

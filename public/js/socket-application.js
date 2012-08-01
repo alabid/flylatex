@@ -64,7 +64,7 @@ socket.on("newMessage", function(messageStr) {
     // notify user instantly of message
     var response = {infos:[], errors:[]};
     response.infos.push("You have a new message from " + message.fromUser 
-			+ " about the document, " + message.documentName + "."
+			+ " about the document " + message.documentName + "."
 			+ " Check your mail for more details!");
     updateAlerts(response);
 });
