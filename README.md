@@ -1,7 +1,7 @@
 FlyLatex
 ========
 
-FlyLatex is a Real Time Collaborative Environment for LaTeX built in nodejs.
+FlyLatex is a real-time collaborative environment for LaTeX built in nodejs.
 It includes a beautiful LaTeX ACE Editor and a PDF renderer. 
 
 FlyLatex gives you:
@@ -14,9 +14,9 @@ FlyLatex gives you:
 
 * Easy LateX Debugging Online
 
-* Easy Manipulation of Compiled PDF
+* Easy Manipulation of Compiled PDFs
 
-* Easy Sharing of PDF
+* Easy Sharing of PDFs
 
 * An Open Source product that's easy to Customize
 
@@ -69,7 +69,7 @@ You'd have to first start the `mongo` daemon using the command
 path.
 
 Then `cd` into the directory (if you aren't already there) and run the command
- `foreman start`. This should invoke the `Procfile` in that directory and start 
+ `foreman start`. This should invoke the `Procfile` in that directory (if you have the foreman gem installed) and start 
 the server via:
 
     web: node app.js
@@ -77,8 +77,10 @@ the server via:
 You should see a command-line message telling you the port number on which the app lives. For example, I saw the message
 
     20:38:10 web.1     | Express server listening on port 5000 in development mode
-    
+
 So I had to visit `http://localhost:5000`. Yours might be different. Watch out.
+    
+If you don't have the foreman gem installed, start the app via `node app.js`.
 
 
 Feedback, Bugs, Suggestions
@@ -94,7 +96,7 @@ Daniel Alabi
 
 Version
 -------
-0.5.0-Beta
+0.5.0
 
 MIT Open Source License
 -----------------------
