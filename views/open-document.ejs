@@ -36,10 +36,12 @@
       Compile and Render
     </button>
     <% if (userDocument.canShare)  { %>
+    <!-- 
     <button class="btn btn-primary pull-right" onclick="docs_manager.sharePDFDoc('<%= userDocument.id %>', '<%= userDocument.name %>');">
       <i class="icon-share"></i>
       Share PDF
-    </button>
+    </buton>
+    --> 
     <% } %>
     <div class="pdf-render">
       <button class="btn" id="prev" onclick="docs_manager.goPreviousPage();">

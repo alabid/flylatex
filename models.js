@@ -11,10 +11,10 @@ var crypto = require("crypto")
 , mongoose = require("mongoose")
 , Schema = mongoose.Schema
 , ObjectId = Schema.ObjectId
-, attachments = require("mongoose-attachments")
 
 // load configurations here
-, configs = require('./configs');
+, configs = require("./configs")
+, fs = require("fs-extra");
 
 var DocPrivilege = new Schema ({
     access: {type: Number
@@ -116,26 +116,25 @@ var PDFDoc = new Schema({
     // ==================================================================
 });
 
-PDFDoc.plugin(attachments, {
-    directory: configs.attachments.directory
-    , storage: {
-	providerName: configs.attachments.providerName
-	, options: {
-	    key: configs.attachments.key
-	    , secret: configs.attachments.secret
-	    , bucket: configs.attachments.bucket
-	}
-    }
-    , properties: {
-	pdf: {
-	    styles: {
-		original: {
-		    // keep the original file
-		}
-	    }
-	}
+/*
+ * Create the new directory to store compiled pdfs
+ */
+// add '/' to path if not already added
+var dirpath = configs.directory.path;
+if (dirpath == undefined || dirpath.length == 0) {
+    dirpath = __dirname + "/pdfs/";
+} else {
+    dirpath = (dirpath[-1] == "/" ? dirpath : dirpath + "/");
+}
+fs.mkdirp(dirpath, function(err) {
+    if (err) {
+	console.log("An error occured while creating directory: "
+		   , dirpath);
+    } else {
+	console.log("Successfully created: ", dirpath);
     }
 });
+configs.directory.path = dirpath;
 
 /*
  * virtual methods here

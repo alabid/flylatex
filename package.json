@@ -4,12 +4,12 @@
   , "dependencies": {
       "express" : "2.5.x"
       , "mongoose" : "2.6.x"
-      , "mongoose-attachments" : "0.0.x"
       , "request" : "2.9.x"
       , "share" : "0.5.x"
       , "socket.io" : "0.9.x"
       , "temp" : "0.4.x"
       ,"connect-mongo" : "0.1.x"
       , "ejs" : "0.8.x"
+      , "fs-extra" : "0.x.x"
   }
 }

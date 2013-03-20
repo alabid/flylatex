@@ -19,12 +19,11 @@ var mongoose = require("mongoose")
 , configs = require("./configs")
 
 , temp = require("temp")
-, fs = require("fs")
+, fs = require("fs-extra")
 , util = require("util")
 , path = require("path")
 , exec = require("child_process").exec
-, http = require("http")
-, request = require("request");
+, http = require("http");
 
 
 // connect to the flydb app db
@@ -1137,9 +1136,8 @@ exports.servePDF = function(req, res) {
 	    res.redirect("back");
 	    return;
 	}
-
 	// write pdf file to user
-	request.get(doc.pdf.original.defaultUrl).pipe(res);
+	fs.createReadStream(configs.directory.path+documentId+".pdf").pipe(res);
     });
 };
 
@@ -1224,27 +1222,31 @@ exports.compileDoc = function(req, res) {
 			var newpdf = new PDFDoc();
 			newpdf.forDocument = documentId;
 			newpdf.title = documentId+".pdf";
-			
-			newpdf.attach("pdf", {path:path.join(dirPath, documentId+".pdf")} , function(err) {
+			tempfile = path.join(dirPath, newpdf.title);
+			fs.copy(tempfile
+				, configs.directory.path + newpdf.title
+				, function(err){
 			    if (err) {
 				console.log(err);
 				response.errors.push(errorStr);
 				res.json(response);
 				return;
-			    }
-			    newpdf.save(function(err) {
-				if (err) {
-				    console.log(err);
-				    response.errors.push(errorStr);
+			    } else {
+				console.log("Successfully saved "+newpdf.title+" in "+configs.directory.path);
+				newpdf.save(function(err) {
+				    if (err) {
+					console.log(err);
+					response.errors.push(errorStr);
+					res.json(response);
+					return;
+				    }
+				    response.infos.push("Successfully compiled "+ req.body.documentName);
+				    // make the compiledDocURI
+				    response.compiledDocURI = "/servepdf/"+documentId;
+				    // send response back to user
 				    res.json(response);
-				    return;
-				}
-				response.infos.push("Successfully compiled " + req.body.documentName);
-				// make the compiledDocURI
-				response.compiledDocURI = "/servepdf/"+documentId;					      
-				// send response back to user
-				res.json(response);		
-			    });
+				});
+			    }
 			});
 		    });
 		});

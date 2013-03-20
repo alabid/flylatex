@@ -20,6 +20,9 @@ FlyLatex gives you:
 
 * An Open Source product that's easy to Customize
 
+It's a free and open-source version of [ShareLatex](http://sharelatex.com).
+Woot!
+
 Screen Shots of the Internals of the FlyLatex application
 ---------------------------------------------------------
 
@@ -31,30 +34,26 @@ Setup
 To use FlyLatex, you must have `node`, `npm`, `mongodb` installed. So if you haven't already installed all these, do so before moving on.
 
 Also, if you want to store and render pdf's and not just edit your LaTeX
-files, you must sign up for a cloud storage service like 
-[Amazon S3](http://aws.amazon.com/es/s3/). 
-Other providers should be accessible in the future. In addition, you must 
+files, you must
 have the program `pdflatex` command line tool installed. If not, install
-it.
+it. FlyLatex stores compiled pdfs in the directory 
+`config.directory.path` specified in `configs.js`.
 
 To install FlyLatex, first clone the repository: `git clone https://github.com/alabid/flylatex.git`
 
 `cd` into the directory `flylatex`. Open the file `configs.js` with your favorite
-editor and edit the file to reflect your cloud storage setup and your database
+editor and edit the file to reflect your storage setup and your database
 setup.
 
 	var config = {
-  	    attachments : {
-	    	directory : "pdfs"
-		, providerName : "<provider name here>" // for example "s3"
-		, key : "<your key here>"  // your access id key
-		, secret : "<your secret here>" // your s3 secret key
-	    	, bucket : "<your bucket here>" // amazon s3 bucket name
-   	    }
-	    , db : {
-	      url : "<your mongodb database url>" // for example: mongodb://localhost/flydb"
+	    directory: {
+	        path: "/Users/alabid/flylatex/blank"
 	    }
-	};
+	    , db: {
+	      	url: "mongodb://localhost/flydb"
+	    }
+	};	      
+
 
 Then run the command `npm install -d` to install all the dependencies for the
 FlyLatex nodejs app. This should take only a few minutes.
