@@ -2,7 +2,7 @@ var config = {
     directory: {
 	// absolute path of where to store compiled pdfs
 	// defaults to "pdfs" directory in "flylatex" repo
-	path: "/Users/alabid/flylatex/blank" 
+	path: ""
     }
     , db : {
 	url : "mongodb://localhost/flydb" // for example: mongodb://localhost/flydb3"

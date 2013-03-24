@@ -47,7 +47,8 @@ setup.
 
 	var config = {
 	    directory: {
-	        path: "/Users/alabid/flylatex/blank"
+	    	// for example, path: "/Users/alabid/flylatex/blank"
+	        path: ""
 	    }
 	    , db: {
 	      	url: "mongodb://localhost/flydb"
