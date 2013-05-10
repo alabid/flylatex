@@ -43,7 +43,7 @@ var User = mongoose.model("User")
 // ================ GLOBAL variables here =============
 
 // maximum number of documents a user can have
-var MAX_DOCS = 20;
+var MAX_DOCS = ( configs.docs.MAX_NUM_PER_USER > 0 ? configs.docs.MAX_NUM_PER_USER : 20 );
 
 // messageTypes
 var MESSAGE_TYPES = {
@@ -385,7 +385,7 @@ exports.createDoc = function(req, res) {
     } else {
 	// then check that the user doesn't have up to MAX_DOCS documents yet
 	if (req.session.userDocuments.length >= MAX_DOCS) {
-	    response.errors.push("You can't have more than " + MAX_DOCS + " documents. Delete some documents to create space.");
+	    response.errors.push("You can't have more than " + MAX_DOCS + " documents. Delete some documents to create space. Or contact the Administrator.");
 	    res.json(response);
 	    return;		
 	} else {
@@ -1342,7 +1342,10 @@ exports.openDocument = function(req, res) {
 
 	// retrieve the document from the current user session
 	docInSession = searchForDocsInSession(documentId, req.session);	
-	
+	// handle lag in findOne callback execution
+	if (docInSession == null) {
+	    return;
+	}
 
 	// get document lines
 	doc.lines.forEach(function(item, index) {
@@ -1469,9 +1472,11 @@ exports.saveDocument = function(req, res) {
  * @return document
  */
 var searchForDocsInSession = function(documentId, session) {
-    for (var i = 0; i < session.userDocuments.length; i++) {
-	if (session.userDocuments[i].id == documentId) {
-	    return session.userDocuments[i];
+    if (session.userDocuments != undefined) {
+	for (var i = 0; i < session.userDocuments.length; i++) {
+	    if (session.userDocuments[i].id == documentId) {
+		return session.userDocuments[i];
+	    }
 	}
     }
     return null;

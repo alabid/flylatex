@@ -349,7 +349,11 @@ function DocsManager() {
 	    , success: function(response) {
 		// update alerts
 		updateAlerts(response);
-		
+		// check if any errors
+		if (response.errors.length > 0) {
+		    return;
+		}
+
 		// get new user document object
 		var userDocument = response.newDocument;
 		
