@@ -42,8 +42,8 @@ it. FlyLatex stores compiled pdfs in the directory
 To install FlyLatex, first clone the repository: `git clone https://github.com/alabid/flylatex.git`
 
 `cd` into the directory `flylatex`. Open the file `configs.js` with your favorite
-editor and edit the file to reflect your storage setup and your database
-setup.
+editor and edit the file to reflect your storage setup, your database
+setup, and others.
 
 	var config = {
 	    directory: {
@@ -52,7 +52,9 @@ setup.
 	    }
 	    , db: {
 	      	url: "mongodb://localhost/flydb"
-	    }
+	    }, docs: {
+	        MAX_NUM_PER_USER : 20
+	    }	    	    
 	};	      
 
 

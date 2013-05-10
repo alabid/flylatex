@@ -8,7 +8,7 @@ var config = {
 	url : "mongodb://localhost/flydb" // for example: mongodb://localhost/flydb3"
     }, docs: {
 	// maximum number of documents per user
-	MAX_NUM_PER_USER : 7
+	MAX_NUM_PER_USER : 20
     }
 };
 
