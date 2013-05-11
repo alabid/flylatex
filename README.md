@@ -43,15 +43,15 @@ To install FlyLatex, first clone the repository: `git clone https://github.com/a
 
 `cd` into the directory `flylatex`. Open the file `configs.js` with your favorite
 editor and edit the file to reflect your storage setup and your database
-setup. `configs.pdfs.path` specifies what directory you want to store
-your output pdfs in. `configs.includes.path` specifies what directory
+setup. Use `configs.pdfs.path` to specify where you want to store
+your output pdfs in. Use `configs.includes.path` to specify what directory
 your TeX includes/packages are stored, for use during compilation of
-your LaTeX documents.
+ALL LaTeX documents.
 
 	var config = {
 	    pdfs: {
-	    	// for example, path: "/Users/alabid/flylatex/blank"
-		// defaults to "pdfs" directory in "flylatex" repo
+	    	  // for example, path: "/Users/alabid/flylatex/blank"
+		  // defaults to "pdfs" directory in "flylatex" repo
 	        path: ""
 	    }
 	    , db: {
