@@ -1,5 +1,5 @@
 var config = {
-    directory: {
+    pdfs: {
 	// absolute path of where to store compiled pdfs
 	// defaults to "pdfs" directory in "flylatex" repo
 	path: ""
@@ -9,6 +9,10 @@ var config = {
     }, docs: {
 	// maximum number of documents per user
 	MAX_NUM_PER_USER : 20
+    }, includes: {
+	// absolute path of includes
+	// defaults to "texpackages" directory in "flylatex" repo
+	path : ""
     }
 };
 

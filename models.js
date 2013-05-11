@@ -117,24 +117,40 @@ var PDFDoc = new Schema({
 });
 
 /*
+ * specify directory for includes
+ */
+var includespath = configs.includes.path;
+if (includespath == undefined || includespath.length == 0) {
+    includespath = __dirname + "/texpackages/";
+} else {
+    includespath = (includespath[-1] == "/" ? incluespath : includespath + "/");
+}
+
+/*
  * Create the new directory to store compiled pdfs
  */
-// add '/' to path if not already added
-var dirpath = configs.directory.path;
-if (dirpath == undefined || dirpath.length == 0) {
-    dirpath = __dirname + "/pdfs/";
+var pdfspath = configs.pdfs.path;
+if (pdfspath == undefined || pdfspath.length == 0) {
+    pdfspath = __dirname + "/pdfs/";
 } else {
-    dirpath = (dirpath[-1] == "/" ? dirpath : dirpath + "/");
+    pdfspath = (pdfspath[-1] == "/" ? pdfspath : pdfspath + "/");
 }
-fs.mkdirp(dirpath, function(err) {
+
+fs.mkdirp(pdfspath, function(err) {
     if (err) {
 	console.log("An error occured while creating directory: "
-		   , dirpath);
-    } else {
-	console.log("Successfully created: ", dirpath);
-    }
+		   , pdfspath);
+    } 
 });
-configs.directory.path = dirpath;
+fs.mkdirp(includespath, function(err) {
+    if (err) {
+	console.log("An error occured while creating directory: "
+		    , includespath);
+    } 
+});
+configs.pdfs.path = pdfspath;
+configs.includes.path = includespath;
+
 
 /*
  * virtual methods here

@@ -1,0 +1,129 @@
+%
+% Algorithm environment
+%
+% $Modified: Mon Feb 12 21:38:28 1996 by otfried $
+%
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{algo}
+  [1996/02/12 v1.2 LaTeX2e package for pseudo code]
+  \typeout{Package: `algo' v1.2 for pseudo code}
+%
+\newif\ifa@numbered
+%  
+\DeclareOption{numbered}{\a@numberedtrue}
+\DeclareOption{named}{\a@numberedfalse}
+%
+\ExecuteOptions{named}
+\ProcessOptions
+%
+\RequirePackage{xspace}
+%
+\newlength{\a@movein}
+\newlength{\a@curwidth}
+%
+\def\a@width#1{\settowidth{\a@curwidth}{\textbf{#1~}}}
+\def\a@indent#1{\a@width{#1}\addtolength{\a@movein}{\a@curwidth}}
+\def\a@outdent#1{\a@width{#1}\addtolength{\a@movein}{-\a@curwidth}}
+%
+\def\qinput#1{\item[\textbf{Input:~}]#1\ignorespaces}
+\def\qoutput#1{\item[\textbf{Output:~}]#1\ignorespaces}
+\def\qcomment#1{\item[\textrm{\qcom{#1}}]\ignorespaces}
+\ifa@numbered
+\def\qprocedure{\@ifnextchar[{\@qprocedure}{\@@qprocedure}}
+\def\@qprocedure[#1]#2{\item[\textbf{Procedure~}]\qproc[#1]{#2}\ignorespaces}
+\def\@@qprocedure#1{\item[\textbf{Procedure~}]\qproc{#1}\ignorespaces}
+\else
+\newcommand\qprocedure[2][]{}
+\fi
+%
+\def\qif{{\bf if~}\a@indent{if~then}}
+\def\qthen{\leavevmode\llap{{\bf then~}}}
+\def\qelse{\leavevmode\a@width{then}\hbox to 0pt{\kern - \a@curwidth
+    \bf else\hss}}
+\def\qfi{\a@outdent{if~then}}
+\let\qendif\qfi
+%
+\def\qfor{{\bf for~}\a@indent{for~do}}
+\def\qdo{\leavevmode\llap{\bf do~}}
+\def\qrof{\a@outdent{for~do}}
+\let\qendfor\qrof
+\def\qwhile{\textbf{while~}\a@indent{while}}
+\def\qend{\a@outdent{while}}
+\let\qelihw\qend
+\def\qrepeat{\textbf{repeat}\a@indent{rep}}
+\def\quntil{\a@outdent{rep}\\\textbf{until~}}
+%
+\def\qcom#1{($\ast$~#1~$\ast$)}
+%
+\def\a@proc[#1]#2{{\it #2\/}{\rm ($#1$)}}
+\def\a@noargproc#1{{\it #1\/}}
+\def\qproc{\@ifnextchar[{\a@proc}{\a@noargproc}}
+%
+\def\qqif{\textbf{if}\xspace}
+\def\qqthen{\textbf{then}\xspace}
+\def\qqelse{\textbf{else}\xspace}
+\def\qlet{\ensuremath{\mathrel{\leftarrow}}}
+\def\qto{\textbf{to}\xspace}
+\def\qdownto{\textbf{downto}\xspace}
+\def\qand{\textbf{and}\xspace}
+\def\qor{\textbf{or}\xspace}
+\def\qnot{\textbf{not}\xspace}
+\def\qstop{\textbf{stop}\xspace}
+\def\qreturn{\textbf{return}\xspace}
+%
+\def\qnil{\textbf{nil}\xspace}
+\def\qtrue{\textbf{true}\xspace}
+\def\qfalse{\textbf{false}\xspace}
+%
+\newcounter{a@line}
+\def\a@cr{\par
+  \advance\@totalleftmargin by \a@movein
+  \advance\linewidth by -\a@movein
+  \advance\labelwidth by \a@movein
+  \parshape \@ne \@totalleftmargin \linewidth
+  \a@movein 0pt
+  \item}
+%
+\newcounter{algorithm}
+\def\a@counter{algorithm}
+\edef\thealgorithm{\@thmcounter{algorithm}}
+\def\algorithmcounter#1{\gdef\a@counter{#1}
+  \gdef\thealgorithm{\csname the#1\endcsname}}
+%
+% Algorithm environment:
+% Use list environment to take care of vertical spacing before and
+% after environment.
+%
+\def\algorithm#1{%
+  \ifa@numbered
+  \refstepcounter{\a@counter}%
+  \else
+  \edef\@currentlabel{\noexpand\a@noargproc{#1}}%
+  \fi
+  \@ifnextchar[{\a@paralgo{#1}}{\a@genalgo{\qproc{#1}}}% match ]
+  }
+%
+\def\a@paralgo#1[#2]{\a@genalgo{\qproc[{#2}]{#1}}}
+%
+\def\a@genalgo#1#2{%
+  \list{\arabic{a@line}.\hfill}%
+  {\usecounter{a@line}
+    \itemsep 0pt
+    \parsep 0pt
+    \leftmargin 2em
+    \rightmargin 0pt
+    \labelwidth 2em
+    \labelsep 0pt
+    \let\\=\a@cr
+    }
+  \ifa@numbered
+  \item[\textbf{Algorithm\ \thealgorithm}]
+    \ignorespaces #2
+  \else
+  \item[\textbf{Algorithm\ {#1}}]
+    \ignorespaces #2
+  \fi
+  \item
+    }
+\def\endalgorithm{\endlist}
+%
