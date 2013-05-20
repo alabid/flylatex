@@ -105,9 +105,12 @@ function DocsManager() {
 			// update logs for most recent pdf compile
 			// if any errors found in the log, then display
 			// error in compile message to user
-			isError = !updateLogs(response.logs);
+			var isError = false;
+
+			updateLogs(response.logs);
+
 			if (response.errors.length > 0) {
-			    return;
+				isError = true;
 			}
 
 			// PDFJS.disableWorker = true;
