@@ -1442,7 +1442,7 @@ exports.saveDocument = function(req, res) {
 	    
 	    doc.lines[lineNum] = newLine;
     
-	    documentText = documentText.slice((lineNum+1)*maxDocLine);
+	    documentText = documentText.slice(maxDocLine);
 	    lineNum++;	
 	}
 	
