@@ -348,7 +348,7 @@ exports.createDoc = function(req, res) {
 				    , writeAccess: true
 				    , execAccess: true
 				    , canShare: true}
-		   }
+		   };
     
     var docName = req.body.docName;
 
@@ -483,7 +483,7 @@ exports.deleteDoc = function(req, res) {
 	user.save();
 
 	// change session object to reflect new change in user's documents
-	for (var i = 0; i < req.session.userDocuments.length; i++) {	    
+	for (i = 0; i < req.session.userDocuments.length; i++) {	    
 	    if (req.session.userDocuments[i].id == docId) {
 		req.session.userDocuments.splice(i,1);
 		
@@ -788,7 +788,7 @@ exports.getMessages = function(req, res) {
  * @param res: response object
  */
 exports.grantAccess = function(req, res) {
-    var response = {errors: [], infos:[]}
+    var response = {errors: [], infos:[]};
     
     /**
      * options passed in: userToGrant, documentId, documentName, access
@@ -1035,7 +1035,7 @@ exports.acceptAccess = function(req, res) {
 		}
 	    }
 	    if (upgrading) {
-		for (var i = 0; i < req.session.userDocuments.length; i++) {
+		for (i = 0; i < req.session.userDocuments.length; i++) {
 		    if (req.session.userDocuments[i].id == newUserDocument.id) {
 			// upgrade all we've got
 			req.session.userDocuments[i] = newUserDocument;
@@ -1544,7 +1544,7 @@ var createNewDocument = function(docName, currentUser) {
 		     , documentType: 0 // latex document
 		    };
     
-    for (var key in newDocObj) {
+    for (key in newDocObj) {
 	newDoc[key] = newDocObj[key];
     }
     // save the document
