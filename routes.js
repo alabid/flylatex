@@ -30,7 +30,6 @@ require("./models"); // import the models here
 // import the models here
 var User = mongoose.model("User")
 , Document = mongoose.model("Document")
-, DocumentLine = mongoose.model("DocumentLine")
 , DocPrivilege = mongoose.model("DocPrivilege")
 , Message = mongoose.model("Message")
 , PDFDoc = mongoose.model("PDFDoc");
@@ -1161,22 +1160,8 @@ exports.compileDoc = function(req, res) {
 	    return;
 	}
 
-	// assemble the document lines
-	var docLines = []
-	, lastModified
-	, docText;
-
-	// get document lines
-	doc.lines.forEach(function(item, index) {
-	    docLines.push(item.data.toString());
-	    
-	    if (!lastModified || lastModified < item.lastModified) {
-		lastModified = item.lastModified;
-	    }
-	});
-
 	// get the document text
-	docText = docLines.join();
+	var docText = doc.data;
 
 	// make temporary directory to create and compile latex pdf
 	temp.mkdir("pdfcreator", function(err, dirPath){
@@ -1339,8 +1324,7 @@ exports.openDocument = function(req, res) {
 	}
 
 	// assemble the document lines
-	var docLines = []
-	, lastModified
+	var lastModified
 	, userDoc
 	, docInSession
 	, writeable
@@ -1352,15 +1336,6 @@ exports.openDocument = function(req, res) {
 	if (docInSession == null) {
 	    return;
 	}
-
-	// get document lines
-	doc.lines.forEach(function(item, index) {
-	    docLines.push(item.data.toString());
-	    
-	    if (!lastModified || lastModified < item.lastModified) {
-		lastModified = item.lastModified;
-	    }
-	});
 	
 	sharesWith = (openDocuments[documentId] ?
 		      openDocuments[documentId] : []);
@@ -1378,8 +1353,8 @@ exports.openDocument = function(req, res) {
 	userDoc = {
 	    "id" : documentId
 	    , "name" : doc.name
-	    , "text" : escape(docLines.join()) // escape special characters
-	    , "lastSaved" : lastModified
+	    , "text" : escape(doc.data) // escape special characters
+	    , "lastSaved" : doc.lastModified
 	    , "sharesWith" : sharesWith
 	    , "readAccess" : docInSession.readAccess
 	    , "writeAccess" : docInSession.writeAccess
@@ -1413,59 +1388,48 @@ exports.saveDocument = function(req, res) {
     var response = {code: 400, errors: [], infos: []}
     , documentId = req.body.documentId
     , documentName = req.body.documentName
-    , documentText = req.body.documentText
-    , maxDocLine = 1024 // a document line has max. length of 1024 
-    , lineNum = 0; // keep track of the current line number
+    , documentText = req.body.documentText;
 
     Document.findOne({_id:documentId}, function(err, doc){
-	var newLine; 
-	
-	if (err || !doc) {
-	    response.errors.push("Error in finding document to save");
-	    res.json(response);
-	    return;
-	}
-		
-	// save document text in form of document lines
-	while (documentText.length > 0) {
-	    newLine = new DocumentLine();
-	    
-	    newLine.lineNum = lineNum;
-	    
-	    newLine.data = new Buffer(documentText.slice(0, maxDocLine));
-	    newLine.lastModified = new Date();
-	    
-	    newLine.save(function(err) {
-		if (!err) 
-		    console.log("new line saved successfully!");
-	    });
-	    
-	    doc.lines[lineNum] = newLine;
-    
-	    documentText = documentText.slice(maxDocLine);
-	    lineNum++;	
-	}
-	
-	if (doc.lines[lineNum]) {
-	    doc.lines.splice(lineNum);
-	}
-	// save the document
-	doc.save();
+						 var newLine
+						 , mb = 1024 * 1024;
+						 
+						 if (err || !doc) {
+							 response.errors.push("Error in finding document to save");
+							 res.json(response);
+							 return;
+						 }
 
-	var savedDocMessage = {
-	    "sharesWith" : openDocuments[documentId]
-	    , "lastModified" : (newLine ? newLine.lastModified : new Date())
-	};
-
-	// send a message to all users that are currently viewing the saved doc
-	io.sockets.volatile.emit("savedDocument", JSON.stringify(savedDocMessage));
-
-
-	// after save
-	response.code = 200;
-	response.infos.push("Successfully saved the document");
-	res.json(response);
-    });
+						 // check if documentText length > 15MB (MongoDB doc size limit)
+						 if (documentText.length > 15 * mb) {
+							 response.errors.push("This document is 15MB or above. Too large to store.");
+							 res.json(response);
+							 return;
+						 }
+						 
+						 doc.data = new Buffer(documentText);
+						 doc.lastModified = new Date();
+						 
+						 // save document text
+						 doc.save(function(err) {
+									  if (err) {
+										  console.log("Error while trying to save this document");
+									  }
+								  });
+						 
+						 var savedDocMessage = {
+							 "sharesWith" : openDocuments[documentId]
+							 , "lastModified" : doc.lastModified
+						 };
+						 
+						 // send a message to all users that are currently viewing the saved doc
+						 io.sockets.volatile.emit("savedDocument", JSON.stringify(savedDocMessage));
+						 
+						 // after save
+						 response.code = 200;
+						 response.infos.push("Successfully saved the document");
+						 res.json(response);
+					 });
 };
 
 // ============== Helper functions here ==========
@@ -1523,29 +1487,17 @@ var giveUserSharePower = function(fromUser, documentId) {
  * @return DocPrivilege -> representing new document
  */
 var createNewDocument = function(docName, currentUser) {
-    // create the first document line
-    // of the document
-    var newDocLine = new DocumentLine();
-    var newDocLineObj = {lineNum: 0
-			 , data: new Buffer(0)
-			};
-    for (var key in newDocLineObj) {
-	newDocLine[key] = newDocLineObj[key];
-    }
-    // save the document line
-    newDocLine.save();
-    
     // create the document (with some properties)
     var newDoc = new Document();
     var newDocObj = {name: docName
-		     , lines: [newDocLine]
-		     , lastModified: new Date()
-		     , usersWithShareAccess: [currentUser]
-		     , documentType: 0 // latex document
-		    };
+					 , data: ""
+					 , lastModified: new Date()
+					 , usersWithShareAccess: [currentUser]
+					 , documentType: 0 // latex document
+					};
     
     for (key in newDocObj) {
-	newDoc[key] = newDocObj[key];
+		newDoc[key] = newDocObj[key];
     }
     // save the document
     newDoc.save();

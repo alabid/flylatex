@@ -3,7 +3,6 @@
  * * User
  * * DocPrivilege
  * * Document
- * * DocumentLine
  * *
  */
 
@@ -79,25 +78,14 @@ var Message = new Schema ({
 		}
 });
 
-var DocumentLine = new Schema({
-    lineNum: Number
-    , data: Buffer 
-    , lastModified: {type: Date
-		     , default: new Date()
-		    }
-});
-
-
 var Document = new Schema ({
     name: String
-    , lines: [DocumentLine]
-    // logical lines. A line could range from
-    // 0 chars to
-    // 1024 chars
+	, data: Buffer
     , lastModified: Date
     , createdAt: {type: Date
 		  , default: new Date()
 		 }
+	// latex document -> 0; other types to come
     , documentType: Number 
     , usersWithShareAccess: [String] // store userNames of users with full access to doc
 });
@@ -201,12 +189,10 @@ User.pre("save", function(next) {
 // export the models:
 // i) User
 // ii) Document
-// iii) DocumentLine
-// iv) DocPrivilege
-// v) Message
+// iii) DocPrivilege
+// iv) Message
 mongoose.model("User", User);
 mongoose.model("Document", Document);
-mongoose.model("DocumentLine", DocumentLine);
 mongoose.model("DocPrivilege", DocPrivilege);
 mongoose.model("Message", Message);
 mongoose.model("PDFDoc", PDFDoc);
