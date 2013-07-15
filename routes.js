@@ -34,6 +34,16 @@ var User = mongoose.model("User")
 , Message = mongoose.model("Message")
 , PDFDoc = mongoose.model("PDFDoc");
 
+// laod helpers here
+var helpers = require("./routes_lib/helpers.js");
+
+// import some route definitions
+exports.index = require("./routes_lib/index.js").index;
+exports.logOutUser = require("./routes_lib/logout.js").logOutUser;
+exports.displaySignUpForm = require("./routes_lib/displaysignup.js").displaySignUpForm;
+exports.addNewDocument = require("./routes_lib/addnewdocument.js").addNewDocument;
+
+
 
 // ================ GLOBAL variables here =============
 
@@ -74,7 +84,7 @@ var openDocuments = {};
 
 
 /*
- * preGetIndex -
+ * preIndex -
  * load currentUser's data before loading page
  * if user's not registered, just go to next
  * @param req -> request object
@@ -127,7 +137,7 @@ exports.preIndex = function(req, res, next) {
 			  console.log("=============================================");
 			  
 			  // user authenticated! Can go in
-			  var loadedUser = loadUser(user);
+			  var loadedUser = helpers.loadUser(user);
 			  for (key in loadedUser) {
 			      req.session[key] = loadedUser[key];
 			  }
@@ -145,85 +155,9 @@ exports.preIndex = function(req, res, next) {
 	}
 	
     }
-}
-
-/*
- * index
- * handles both get and post request on the / page
- * @param req -> request object
- * @param res -> response object
- * @param err -> error object
- *
- */
-exports.index = function(req, res, err){    
-    req.session.currentUser = (req.session.currentUser == undefined ?  "" :
-			       req.session.currentUser);
-
-    req.session.isLoggedIn = (req.session.isLoggedIn == undefined ? false :
-			      req.session.isLoggedIn);
-
-    req.session.userDocuments = (req.session.userDocuments == undefined ? [] :
-				 req.session.userDocuments);
-
-
-    if (req.session.currentUser && req.session.isLoggedIn) {
-	// display the documents for user
-	res.render("display-docs",
-		   {title: "Fly Latex: Start Editing Documents"
-		    , shortTitle: "Fly Latex"
-		    , tagLine: "Start Editing Documents with Your Peeps!"
-		    , fileSpecificScript: "application.js"
-		    , currentUser: req.session.currentUser
-		    , isLoggedIn: req.session.isLoggedIn
-		    , userDocuments: req.session.userDocuments		    
-		   });
-	
-    } else {
-	// user didn't try to log in 
-	res.render("not-logged-in",
-		   {title: "Log Into/Sign Into to FLY LATEX!"
-		    , shortTitle: "FLY LATEX"
-		    , tagLine: "Real Time Collaborative editor in node-js"
-		    , fileSpecificStyle: "not-logged-in.css"});
-    }
 };
 
 
-/*
- * logOutUser -
- * log user out
- * @param req -> request object
- * @param res -> response object
- * @param next -> next (middleware) function (in callchain) to execute
- */
-exports.logOutUser = function(req, res, next) {
-    if (req.session.currentUser && req.session.isLoggedIn) {
-	req.session.regenerate(function(err) {
-	    if (err) {
-		console.log("==========Error while logging out=============");
-	    } 
-	    next();
-	});
-    }
-};
-
-/*
- * displaySignUpForm ->
- *  displays sign up form for user to sign up for
- *  fly latex
- * @param req -> request object
- * @param res -> response object
- */
-exports.displaySignUpForm = function(req, res) {
-    res.render("sign-up",
-	       {title: "Sign Up for Fly Latex"
-		, shortTitle: "Sign Up"
-		, tagLine: "Start Editing Documents with Your Peeps!"
-		, fileSpecificStyle: "sign-up.css"
-		, fileSpecificScript: "application.js"
-	       });
-    
-};
 
 /*
  * processSignUpData ->
@@ -287,7 +221,7 @@ exports.processSignUpData = function(req, res) {
 		      errors["userNameTaken"] = "The username " + newUser.userName + " is already taken";
 		      isError = true;
 
-		      displayErrorsForSignUp(res, errors);
+		      helpers.displayErrorsForSignUp(res, errors);
 		  } else {
 		      // save the user
 		      var newFlyUser = new User();
@@ -306,8 +240,8 @@ exports.processSignUpData = function(req, res) {
 		      });
 		      
 		      // load user here
-		      var loadedUser = loadUser(newFlyUser);
-		      for (var key in loadedUser) {
+		      var loadedUser = helpers.loadUser(newFlyUser);
+		      for (key in loadedUser) {
 			  req.session[key] = loadedUser[key];
 		      }
 		      
@@ -320,7 +254,7 @@ exports.processSignUpData = function(req, res) {
 	
     } else {
 	// there's an error. Return error message(s) to user
-	displayErrorsForSignUp(res, errors);
+	helpers.displayErrorsForSignUp(res, errors);
     }
 };
 
@@ -386,7 +320,7 @@ exports.createDoc = function(req, res) {
 	} else {
 	    // so we can create a new document 
 	    // the new document will have only one line for starters
-	    var newDoc = createNewDocument(req.body.docName, req.session.currentUser);
+	    var newDoc = helpers.createNewDocument(req.body.docName, req.session.currentUser);
 
 	    // by default, document privilege for the
 	    // current user is 7 (full access)
@@ -832,7 +766,7 @@ exports.grantAccess = function(req, res) {
 		canShare = true;
 
 		// give user R, W, X access
-		giveUserSharePower(req.body.userToGrant, req.body.documentId);
+		helpers.giveUserSharePower(req.body.userToGrant, req.body.documentId);
 	    }
 
 	    // de-couple privileges here
@@ -987,7 +921,7 @@ exports.acceptAccess = function(req, res) {
 	    // give user share power
 	    // a user can only get share access when he's given access of 7
 	    // which corresponds to R, W, X
-	    giveUserSharePower(req.session.currentUser, req.body.documentId);
+	    helpers.giveUserSharePower(req.session.currentUser, req.body.documentId);
 	}
 	
 	// de-couple privileges
@@ -1101,7 +1035,7 @@ exports.reloadSession = function(req, res) {
     } else if (req.session.currentUser == req.body.document.forUser) {
 	User.findOne({userName: req.session.currentUser}, function(err, user) {
 	    // reload user
-	    var loadedUser = loadUser(user);
+	    var loadedUser = helpers.loadUser(user);
 	    for (var key in loadedUser) {
 		req.session[key] = loadedUser[key];
 	    }
@@ -1247,31 +1181,6 @@ exports.compileDoc = function(req, res) {
 };
 
 
-/**
- * exports.addNewDocument -
- * add a new document to my list of documents in my session
- * @param req : request object
- * @param res : response object
- */
-exports.addNewDocument = function(req, res) {
-    var response = {infos:[], errors: []};
-    
-    if (!(req.session.currentUser && req.session.isLoggedIn)) {
-	response.errors.push("You are not logged in.");
-	res.json(response);
-	return;
-    } else if (req.session.currentUser === req.body.document.forUser) {
-	// add to user's list of documents
-	var document = req.body.document;
-	
-	req.session.userDocuments.push(document);
-	
-	response.infos.push(document.fromUser + " just added " + document.name + " to your list of documents");
-	
-	res.json(response);
-    }
-
-};
 
 /**
  * exports.deleteMessage ->
@@ -1331,7 +1240,7 @@ exports.openDocument = function(req, res) {
 	, sharesWith;
 
 	// retrieve the document from the current user session
-	docInSession = searchForDocsInSession(documentId, req.session);	
+	docInSession = helpers.searchForDocsInSession(documentId, req.session);	
 	// handle lag in findOne callback execution
 	if (docInSession == null) {
 	    return;
@@ -1432,160 +1341,5 @@ exports.saveDocument = function(req, res) {
 					 });
 };
 
-// ============== Helper functions here ==========
-/**
- * searchForDocsInSession
- * search for document in session.userDocuments
- *
- * @param documentId - id of document to search for
- * @param session - session object for current user
- * @return document
- */
-var searchForDocsInSession = function(documentId, session) {
-    if (session.userDocuments != undefined) {
-	for (var i = 0; i < session.userDocuments.length; i++) {
-	    if (session.userDocuments[i].id == documentId) {
-		return session.userDocuments[i];
-	    }
-	}
-    }
-    return null;
-};
 
-/**
- * giveUserSharePower
- *
- * if user has full access to doc, give user power to be able to 
- * share the document with other users
- *
- * @param fromUser -> user to give full access to
- * @param documentId -> document id of document concerned
- */
-var giveUserSharePower = function(fromUser, documentId) {
-    Document.findOne({_id: documentId}, function(err, doc) {
-	if (!err) {
-	    if (doc.usersWithShareAccess.indexOf(fromUser) == -1) {
-		doc.usersWithShareAccess.push(fromUser);
-		
-		// save doc
-		doc.save();
-	    }
-	} else {
-	    console.log("An error occured while trying to note " 
-			+ "in document model that "
-			+ req.body.fromUser + " has full access to the doc");  
-	}
-    });
-};
 
-/**
- * createNewDocument
- * create a new document for the current user
- *
- * @param docName -> document name
- * @param currentUser -> created by
- * @return DocPrivilege -> representing new document
- */
-var createNewDocument = function(docName, currentUser) {
-    // create the document (with some properties)
-    var newDoc = new Document();
-    var newDocObj = {name: docName
-					 , data: ""
-					 , lastModified: new Date()
-					 , usersWithShareAccess: [currentUser]
-					 , documentType: 0 // latex document
-					};
-    
-    for (key in newDocObj) {
-		newDoc[key] = newDocObj[key];
-    }
-    // save the document
-    newDoc.save();
-    
-    return newDoc;
-};
-
-/*
- * Helper function
- * displayErrorsForSignUp
-*/
-var displayErrorsForSignUp = function(res, errors) {
-    res.render("sign-up",
-	       {title: "Sign Up for Fly Latex"
-		, shortTitle: "Sign Up"
-		, tagLine: "Start Editing Documents with Your Peeps!"
-		, fileSpecificStyle: "sign-up.css"
-		, fileSpecificScript: "application.js"
-		, errors: errors
-	       });
-};
-
-/*
- * Helper function to loadUser onto app
- * Returns an object containing user credentials
- * like username and what not.
- */
-var loadUser = function(user) {
-    var obj = {};
-    
-    obj.currentUser = user.userName;
-    obj.isLoggedIn = true;
-    obj.userDocuments = [];
-    obj.userDocumentsPriv = user.documentsPriv;
-    
-    // user document to send off to front end for display
-    var userDocument = {}
-    , priv;
-
-    user.documentsPriv.forEach(function(item, i) {
-	userDocument.id = item.documentId;
-	userDocument.name = item.documentName;
-	// set defaults here
-	userDocument.readAccess = false;
-	userDocument.writeAccess = false;
-	userDocument.execAccess = false;
-	userDocument.canShare = false;
-	
-	// set privileges here
-	priv = item.access;
-	
-	if (priv >= 4) {
-	    userDocument.readAccess = true;
-	    priv -= 4;
-	}
-	if (priv >= 2) {
-	    userDocument.writeAccess = true;
-	    priv -= 2;
-	}
-	if (priv == 1) {
-	    userDocument.execAccess = true;
-	}
-
-	// if user has R, W, X access, he can share the document
-	// else he cannot
-	if (item.access == 7) {
-	    userDocument.canShare = true;
-	}
-	
-	obj.userDocuments.push(userDocument);
-	userDocument = {};
-    });
-
-    return obj;
-}
-
-/**
- * Helper function to clone an object (deep copy)
- * cloneObject
- * @param obj : object to clone
- */
-function cloneObject(obj) {
-    var clone = {};
-    for(var i in obj) {
-        if(typeof(obj[i])=="object")
-            clone[i] = cloneObject(obj[i]);
-        else
-            clone[i] = obj[i];
-    }
-    return clone;
-}
