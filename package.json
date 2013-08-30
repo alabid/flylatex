@@ -1,6 +1,6 @@
 {
     "name": "fly-latex"
-  , "version": "0.5.0"
+  , "version": "0.9.1"
   , "dependencies": {
       "express" : "2.5.x"
       , "mongoose" : "2.6.x"
