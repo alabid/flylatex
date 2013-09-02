@@ -17,8 +17,8 @@ var crypto = require("crypto")
 
 var DocPrivilege = new Schema ({
     access: {type: Number
-	     , default: 7
-	    }
+         , default: 7
+        }
     /*
      * 7 - full
      * 6 - read and write
@@ -40,24 +40,24 @@ var DocPrivilege = new Schema ({
 
 var User = new Schema ({
     userName: {type: String
-	       , index: {unique: true}
-	      }
+           , index: {unique: true}
+          }
     , hashedPassword: {type: String
-		       , index: {unique: true}
-		      }
+               , index: {unique: true}
+              }
     , salt: String
     , firstName: String
     , lastName: String
     , email: {type: String}
     , githubId: {type: String
-		 , default: ""
-		}
+         , default: ""
+        }
     , twitterId: {type: String
-		  , default: ""
-		 }
+          , default: ""
+         }
     , memberSince: {type: Date
-		    , default: new Date()
-		   }
+            , default: new Date()
+           }
     , documentsPriv: [DocPrivilege] // list of DocPrivilege Objects
 });
 
@@ -74,18 +74,18 @@ var Message = new Schema ({
     , documentName: String
     , access: Number // as in DocPrivilege model
     , timeSent: {type: Date
-		 , default: new Date()
-		}
+         , default: new Date()
+        }
 });
 
 var Document = new Schema ({
     name: String
-	, data: Buffer
+    , data: Buffer
     , lastModified: Date
     , createdAt: {type: Date
-		  , default: new Date()
-		 }
-	// latex document -> 0; other types to come
+          , default: new Date()
+         }
+    // latex document -> 0; other types to come
     , documentType: Number 
     , usersWithShareAccess: [String] // store userNames of users with full access to doc
 });
@@ -94,7 +94,7 @@ var PDFDoc = new Schema({
     title: String
     , forDocument: ObjectId
     , isPublic : {type: Boolean
-		  , default: false}
+          , default: false}
     // ==================================================================
     // isPublic should be set to true only when you want to share
     // to the public. You must have 'share' access to grab the 'embed' url
@@ -126,14 +126,14 @@ if (pdfspath == undefined || pdfspath.length == 0) {
 
 fs.mkdirp(pdfspath, function(err) {
     if (err) {
-	console.log("An error occured while creating directory: "
-		   , pdfspath);
+    console.log("An error occured while creating directory: "
+           , pdfspath);
     } 
 });
 fs.mkdirp(includespath, function(err) {
     if (err) {
-	console.log("An error occured while creating directory: "
-		    , includespath);
+    console.log("An error occured while creating directory: "
+            , includespath);
     } 
 });
 configs.pdfs.path = pdfspath;
@@ -165,7 +165,7 @@ User.method("makeSalt", function() {
 
 User.method("encryptPassword", function(password) {
     return crypto.createHmac("sha1", this.salt)
-	.update(password).digest("hex");
+    .update(password).digest("hex");
 });
 
 /** end of virutal methods def */
@@ -176,10 +176,10 @@ User.method("encryptPassword", function(password) {
  */
 User.pre("save", function(next) {
     if (!(this.firstName && this.lastName
-	 && this.email && this.userName)) {
-	next(new Error("Invalid Params"));
+     && this.email && this.userName)) {
+    next(new Error("Invalid Params"));
     } else {
-	next();
+    next();
     }
 });
 

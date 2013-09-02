@@ -40,41 +40,42 @@ var loadUser = function(user) {
     // user document to send off to front end for display
     var userDocument = {}
     , priv;
+    
+    user.documentsPriv.forEach(
+        function(item, i) {
+            userDocument.id = item.documentId;
+            userDocument.name = item.documentName;
+            // set defaults here
+            userDocument.readAccess = false;
+            userDocument.writeAccess = false;
+            userDocument.execAccess = false;
+            userDocument.canShare = false;
+            
+            // set privileges here
+            priv = item.access;
+            
+            if (priv >= 4) {
+                userDocument.readAccess = true;
+                priv -= 4;
+            }
+            if (priv >= 2) {
+                userDocument.writeAccess = true;
+                priv -= 2;
+            }
+            if (priv == 1) {
+                userDocument.execAccess = true;
+            }
 
-    user.documentsPriv.forEach(function(item, i) {
-	userDocument.id = item.documentId;
-	userDocument.name = item.documentName;
-	// set defaults here
-	userDocument.readAccess = false;
-	userDocument.writeAccess = false;
-	userDocument.execAccess = false;
-	userDocument.canShare = false;
-	
-	// set privileges here
-	priv = item.access;
-	
-	if (priv >= 4) {
-	    userDocument.readAccess = true;
-	    priv -= 4;
-	}
-	if (priv >= 2) {
-	    userDocument.writeAccess = true;
-	    priv -= 2;
-	}
-	if (priv == 1) {
-	    userDocument.execAccess = true;
-	}
-
-	// if user has R, W, X access, he can share the document
-	// else he cannot
-	if (item.access == 7) {
-	    userDocument.canShare = true;
-	}
-	
-	obj.userDocuments.push(userDocument);
-	userDocument = {};
-    });
-
+            // if user has R, W, X access, he can share the document
+            // else he cannot
+            if (item.access == 7) {
+                userDocument.canShare = true;
+            }
+            
+            obj.userDocuments.push(userDocument);
+            userDocument = {};
+        });
+    
     return obj;
 };
 
@@ -82,16 +83,16 @@ var loadUser = function(user) {
 /*
  * Helper function
  * displayErrorsForSignUp
-*/
+ */
 var displayErrorsForSignUp = function(res, errors) {
     res.render("sign-up",
-	       {title: "Sign Up for Fly Latex"
-		, shortTitle: "Sign Up"
-		, tagLine: "Start Editing Documents with Your Peeps!"
-		, fileSpecificStyle: "sign-up.css"
-		, fileSpecificScript: "application.js"
-		, errors: errors
-	       });
+               {title: "Sign Up for Fly Latex"
+                , shortTitle: "Sign Up"
+                , tagLine: "Start Editing Documents with Your Peeps!"
+                , fileSpecificStyle: "sign-up.css"
+                , fileSpecificScript: "application.js"
+                , errors: errors
+               });
 };
 
 /**
@@ -104,11 +105,11 @@ var displayErrorsForSignUp = function(res, errors) {
  */
 var searchForDocsInSession = function(documentId, session) {
     if (session.userDocuments != undefined) {
-	for (var i = 0; i < session.userDocuments.length; i++) {
-	    if (session.userDocuments[i].id == documentId) {
-		return session.userDocuments[i];
-	    }
-	}
+        for (var i = 0; i < session.userDocuments.length; i++) {
+            if (session.userDocuments[i].id == documentId) {
+                return session.userDocuments[i];
+            }
+        }
     }
     return null;
 };
@@ -125,14 +126,14 @@ var createNewDocument = function(docName, currentUser) {
     // create the document (with some properties)
     var newDoc = new Document();
     var newDocObj = {name: docName
-					 , data: ""
-					 , lastModified: new Date()
-					 , usersWithShareAccess: [currentUser]
-					 , documentType: 0 // latex document
-					};
+                     , data: ""
+                     , lastModified: new Date()
+                     , usersWithShareAccess: [currentUser]
+                     , documentType: 0 // latex document
+                    };
     
     for (key in newDocObj) {
-		newDoc[key] = newDocObj[key];
+        newDoc[key] = newDocObj[key];
     }
     // save the document
     newDoc.save();
@@ -150,20 +151,21 @@ var createNewDocument = function(docName, currentUser) {
  * @param documentId -> document id of document concerned
  */
 var giveUserSharePower = function(fromUser, documentId) {
-    Document.findOne({_id: documentId}, function(err, doc) {
-	if (!err) {
-	    if (doc.usersWithShareAccess.indexOf(fromUser) == -1) {
-		doc.usersWithShareAccess.push(fromUser);
-		
-		// save doc
-		doc.save();
-	    }
-	} else {
-	    console.log("An error occured while trying to note " 
-			+ "in document model that "
-			+ req.body.fromUser + " has full access to the doc");  
-	}
-    });
+    Document.findOne({_id: documentId}
+                     , function(err, doc) {
+                         if (!err) {
+                             if (doc.usersWithShareAccess.indexOf(fromUser) == -1) {
+                                 doc.usersWithShareAccess.push(fromUser);
+                                 
+                                 // save doc
+                                 doc.save();
+                             }
+                         } else {
+                             console.log("An error occured while trying to note " 
+                                         + "in document model that "
+                                         + req.body.fromUser + " has full access to the doc");  
+                         }
+                     });
 };
 
 

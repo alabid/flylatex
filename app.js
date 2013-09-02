@@ -21,19 +21,19 @@ app.configure(function(){
     app.use(express.methodOverride());
     app.use(express.cookieParser());
     app.use(express.session({
-	secret: "788e6139b25d14de5eecc7fc14bd65529218e8cc",
-	store: new MongoStore({
-	    db: "user-auth"
-	})
+    secret: "788e6139b25d14de5eecc7fc14bd65529218e8cc",
+    store: new MongoStore({
+        db: "user-auth"
+    })
     }));
     app.use(app.router);
     app.use(express.static(__dirname + '/public'));
 }).dynamicHelpers({
     info: function(req, res) {
-	return req.flash('info');
+    return req.flash('info');
     },
     error: function(req, res) {
-	return req.flash('error');
+    return req.flash('error');
     }
 });
 

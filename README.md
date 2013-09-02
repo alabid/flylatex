@@ -48,22 +48,22 @@ your output pdfs in. Use `configs.includes.path` to specify what directory
 your TeX includes/packages are stored, for use during compilation of
 ALL LaTeX documents.
 
-	var config = {
-	    pdfs: {
-	    	  // for example, path: "/Users/alabid/flylatex/blank"
-		  // defaults to "pdfs" directory in "flylatex" repo
-	        path: ""
-	    }
-	    , db: {
-	      	url: "mongodb://localhost/flydb"
-	    }, docs: {
-	        MAX_NUM_PER_USER : 20
-	    }, includes: {
-	       // specify directory (absolute path) containing latex includes
-	       // defaults to "texpackages" directory in "flylatex" repo
-	       path: ""
-	    }	  	    	    
-	};	      
+    var config = {
+        pdfs: {
+            // for example, path: "/Users/alabid/flylatex/blank"
+            // defaults to "pdfs" directory in "flylatex" repo
+            path: ""
+        }
+        , db: {
+            url: "mongodb://localhost/flydb"
+        }, docs: {
+            MAX_NUM_PER_USER : 20
+        }, includes: {
+            // specify directory (absolute path) containing latex includes
+            // defaults to "texpackages" directory in "flylatex" repo
+            path: ""
+        }                   
+    };        
 
 
 Then run the command `npm install -d` to install all the dependencies for the
