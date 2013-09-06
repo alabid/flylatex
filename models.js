@@ -85,23 +85,12 @@ var Document = new Schema ({
     , createdAt: {type: Date
           , default: new Date()
          }
-    // latex document -> 0; other types to come
+    /* 
+     * latex source file -> 0
+     * other types to come...
+     */
     , documentType: Number 
     , usersWithShareAccess: [String] // store userNames of users with full access to doc
-});
-
-var PDFDoc = new Schema({
-    title: String
-    , forDocument: ObjectId
-    , isPublic : {type: Boolean
-          , default: false}
-    // ==================================================================
-    // isPublic should be set to true only when you want to share
-    // to the public. You must have 'share' access to grab the 'embed' url
-
-    // plus, the only time that you will need to check or use the variable
-    // isPublic is when you are loading a PDF
-    // ==================================================================
 });
 
 /*
@@ -116,8 +105,8 @@ if (pdfspath == undefined || pdfspath.length == 0) {
 
 fs.mkdirp(pdfspath, function(err) {
     if (err) {
-    console.log("An error occured while creating directory: "
-           , pdfspath);
+        console.log("An error occured while creating directory: "
+                    , pdfspath);
     } 
 });
 
@@ -148,7 +137,7 @@ User.method("makeSalt", function() {
 
 User.method("encryptPassword", function(password) {
     return crypto.createHmac("sha1", this.salt)
-    .update(password).digest("hex");
+                    .update(password).digest("hex");
 });
 
 /** end of virutal methods def */
@@ -159,10 +148,10 @@ User.method("encryptPassword", function(password) {
  */
 User.pre("save", function(next) {
     if (!(this.firstName && this.lastName
-     && this.email && this.userName)) {
-    next(new Error("Invalid Params"));
+          && this.email && this.userName)) {
+        next(new Error("Invalid Params"));
     } else {
-    next();
+        next();
     }
 });
 
@@ -178,4 +167,3 @@ mongoose.model("User", User);
 mongoose.model("Document", Document);
 mongoose.model("DocPrivilege", DocPrivilege);
 mongoose.model("Message", Message);
-mongoose.model("PDFDoc", PDFDoc);

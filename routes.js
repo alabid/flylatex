@@ -1,5 +1,5 @@
 /*
- *  Define all routes here for the FlyLaTeX application
+ *  Contains (and imports) all route definitions here for the FlyLaTeX application
  */
 
 var mongoose = require("mongoose")
@@ -7,10 +7,7 @@ var mongoose = require("mongoose")
 , ObjectId = Schema.ObjectId
 , app = require("./app")
 , io = require("socket.io").listen(app)
-
-// load configurations here
 , configs = require("./configs")
-
 , temp = require("temp")
 , fs = require("fs-extra")
 , util = require("util")
@@ -21,33 +18,30 @@ var mongoose = require("mongoose")
 // flylatex directory
 , flylatexdir = __dirname;
 
-// connect to the flydb app db
+// connect to the flydb app database
 mongoose.connect(configs.db.url);
 
-require("./models"); // import the models here
-
-// import the models here
+// import the models
+require("./models"); 
 var User = mongoose.model("User")
 , Document = mongoose.model("Document")
 , DocPrivilege = mongoose.model("DocPrivilege")
-, Message = mongoose.model("Message")
-, PDFDoc = mongoose.model("PDFDoc");
+, Message = mongoose.model("Message");
 
-// laod helpers here
+// laod helpers
 var helpers = require("./routes_lib/helpers.js");
 
 // import some route definitions
 exports.index = require("./routes_lib/index.js").index;
 exports.logOutUser = require("./routes_lib/logout.js").logOutUser;
-exports.displaySignUpForm = require("./routes_lib/displaysignup.js").displaySignUpForm;
-exports.addNewDocument = require("./routes_lib/addnewdocument.js").addNewDocument;
-
-
-
-// ================ GLOBAL variables here =============
+exports.displaySignUpForm = require("./routes_lib/displaysignup.js")
+                              .displaySignUpForm;
+exports.addNewDocument = require("./routes_lib/addnewdocument.js")
+                           .addNewDocument;
 
 // maximum number of documents a user can have
-var MAX_DOCS = ( configs.docs.MAX_NUM_PER_USER > 0 ? configs.docs.MAX_NUM_PER_USER : 20 );
+var MAX_DOCS = ( configs.docs.MAX_NUM_PER_USER > 0 ?
+                 configs.docs.MAX_NUM_PER_USER : 20 );
 
 // messageTypes
 var MESSAGE_TYPES = {
@@ -55,12 +49,8 @@ var MESSAGE_TYPES = {
     , 'shareAccess': 1
 };
 
-// currently opened documents
-// map of docId : [username]
+// currently opened documents ->  map of docId : [username]
 var openDocuments = {};
-
-// ==================================================
-
 
 /*
  * About rendering:
@@ -96,11 +86,11 @@ exports.preIndex = function(req, res, next) {
          && req.body.password == undefined) ||
         (req.body.username.length == 0 
          && req.body.password.length == 0)) {
-
+        
         // user's chilling, makes no attempt to log in
         next();                
     } else if (req.session.currentUser && req.session.isLoggedIn) {
-
+        
         // user's already logged in, so go on
         next();
     } else if (req.body.username && req.body.username.length > 0
@@ -110,8 +100,6 @@ exports.preIndex = function(req, res, next) {
         User.findOne({userName: req.body.username}
                      , function(err, user) {
                          if (err) {
-                             console.log("error: ");
-                             console.log(err);
                              req.session.currentUser = null;
                              req.session.isLoggedIn = false;
                              next();
@@ -119,23 +107,15 @@ exports.preIndex = function(req, res, next) {
                          } 
                          
                          if (!user || typeof user.authenticate != "function") {
-                             // is user even in db ? 
                              req.flash("error", "There's no user called " 
                                        + req.body.username + " in our database");
                              res.redirect('back');
                              return;
                          } else if (!user.authenticate(req.body.password)) {
-                             // user's password incorrect
                              req.flash('error', "Password does not match Username entered");
                              res.redirect('back');
                              return;
-                         } else {
-                             // authenticate user against password entered
-                             console.log("==========user successfully logged in========");
-                             console.log(user);
-                             console.log("=============================================");
-                             
-                             // user authenticated! Can go in
+                         } else {                             
                              var loadedUser = helpers.loadUser(user);
                              for (key in loadedUser) {
                                  req.session[key] = loadedUser[key];
@@ -145,9 +125,7 @@ exports.preIndex = function(req, res, next) {
                          }
                      });
     } else {
-
-        // user's trying to log in, but didn't enter both username
-        // and password
+        
         if (!(req.body.username && req.body.password)) {
             req.flash('error', "Enter both a username and password");
             res.redirect('back');
@@ -171,12 +149,10 @@ exports.processSignUpData = function(req, res) {
     var isError = false;
     var newUser = req.body.newUser;
     
-    // validate userName: make sure no one else has that username
     if (newUser.userName.length == 0) {
         errors["userNameToken"] = "Enter a username";
     }
     
-    // make sure valid password
     if (!(newUser.password.length > 4 // password has to be at least 5 chars 
           && /\d+/.test(newUser.password))) { // password has to have at least one digit
         errors["passwordInvalid"] = "Password must be at least 5 chars "
@@ -184,20 +160,17 @@ exports.processSignUpData = function(req, res) {
         isError = true;
     }
     
-    // make sure password == confirmPassword
     if (newUser.password != newUser.confirmPassword) {
-        errors["passwordNoMatch"] = "The Confirm Password should match the initial password entry";
+        errors["passwordNoMatch"] = "Passwords don't match";
         isError = true;
     }
     
     
-    // make sure email is valid
     if (!(/^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/.test(newUser.email))) {
         errors["emailInvalid"] = "Enter a valid email address";
         isError = true;
     }
     
-    // make sure names are valid
     if (!(newUser.firstName.length > 0
           && newUser.lastName.length > 0)) {
         errors["namesInvalid"] = "Enter a first Name and a Last Name";
@@ -241,7 +214,6 @@ exports.processSignUpData = function(req, res) {
                                   console.log("======================================");
                               });
                           
-                          // load user here
                           var loadedUser = helpers.loadUser(newFlyUser);
                           for (key in loadedUser) {
                               req.session[key] = loadedUser[key];
@@ -250,11 +222,10 @@ exports.processSignUpData = function(req, res) {
                           // redirect to home page with user logged in
                           res.redirect("home");     
                       }
-                  });
-        
+                  });        
         
     } else {
-        // there's an error. Return error message(s) to user
+
         helpers.displayErrorsForSignUp(res, errors);
     }
 };
@@ -287,20 +258,16 @@ exports.createDoc = function(req, res) {
     var docName = req.body.docName;
     
     if (!(docName.length && docName.length > 0)) {
-        // check that document's name is not empty
         response.errors.push("Error in creating document with no title or name");
         res.json(response);
         return;
     } else if (!(req.session.isLoggedIn && req.session.currentUser)) {
-        // user is not logged in
         response.errors.push("You're not not logged in. Please log in!");
         res.json(response);
         return;
     }
     
-    // check the list of documents
-    // verify that this new document doesn't
-    // have the same name as the old ones
+    // verify that this new document doesn't have the same name as the old ones
     var found = false;
     for (var i = 0; i < req.session.userDocuments.length; i++) {
         if (req.session.userDocuments[i].name == docName) {
@@ -314,7 +281,6 @@ exports.createDoc = function(req, res) {
         res.json(response);
         return;
     } else {
-        // then check that the user doesn't have up to MAX_DOCS documents yet
         if (req.session.userDocuments.length >= MAX_DOCS) {
             response.errors.push("You can't have more than " + MAX_DOCS + " documents. "
                                  + "Delete some documents to create space. "
@@ -322,11 +288,11 @@ exports.createDoc = function(req, res) {
             res.json(response);
             return;     
         } else {
-            // so we can create a new document 
-            // the new document will have only one line for starters
-            var newDoc = helpers.createNewDocument(req.body.docName, req.session.currentUser);
+
+            var newDoc = helpers.createNewDocument(req.body.docName
+                                                   , req.session.currentUser);
             
-            // by default, document privilege for the
+            // by default, document privilege for the 
             // current user is 7 (full access)
             var docPriv = new DocPrivilege();
             docPriv.documentId = newDoc._id;
@@ -338,15 +304,12 @@ exports.createDoc = function(req, res) {
             User.findOne({"userName": req.session.currentUser}
                          , function(err, user) {
                              if (err || !user) {
-                                 response.errors.push("error", "Couldn't find you. Weird.");
+                                 response.errors.push("error"
+                                                      , "Couldn't find you. Weird.");
                                  res.json(response);
                                  return;
                              }
-                             
-                             console.log("Document Priv Object created===============");
-                             console.log(docPriv);
-                             console.log("===========================================");
-                             
+                                                          
                              // add to user's documentsPriv
                              user.documentsPriv.push(docPriv);
                              
@@ -369,7 +332,7 @@ exports.createDoc = function(req, res) {
                              
                              // inform user of new document creation
                              response.infos.push("Just created the new Document: " 
-                                                 + req.body.docName + " Hooray!");
+                                                 + req.body.docName + ". Hooray!");
                              res.json(response);
                          });
         }
@@ -405,7 +368,7 @@ exports.deleteDoc = function(req, res) {
     User.findOne({userName: req.session.currentUser}
                  , function(err, user) {
                      if (err || !user) {
-                         console.log("unable to delete doc from " 
+                         console.log("Unable to delete doc from " 
                                      + user.userName + "'s list of documents");
                          response.errors.push("Had problems processing your deletion. Try again.");
                          res.json(response);
@@ -428,7 +391,7 @@ exports.deleteDoc = function(req, res) {
                          if (req.session.userDocuments[i].id == docId) {
                              req.session.userDocuments.splice(i,1);
                              
-                             console.log("Removed userDocument with id: "
+                             console.log("Removed userDocument with _id "
                                          + docId + " from session object");
                          }
                      }                   
@@ -443,7 +406,7 @@ exports.deleteDoc = function(req, res) {
                                                              + docId + " completely from the database");
                                              }
                                              else {
-                                                 console.log("Error while deleting document with id " 
+                                                 console.log("Error while deleting document with _id " 
                                                              + docId + " completely from the database");
                                              }
                                          });
@@ -507,28 +470,19 @@ exports.shareAccess = function(req, res) {
                 (options.withWriteAccess == "true" ? 2 : 0) +
                 (options.withExecAccess == "true" ? 1 : 0));
     
-    // try to return error messages if any errors found
     if (!(req.session.currentUser && req.session.isLoggedIn)) {
         response.errors.push("You are not logged in. So you can't share access");
-        res.json(response);
-        return;
     }
     if (priv == 0) {
         response.errors.push("You can't try to share no privilege Dude/Dudette");
-        res.json(response);
-        return;
     }
     if (!(options.docId
           && options.docName
           && options.userToShare)) {
         response.errors.push("Options passed in are incomplete");
-        res.json(response);
-        return;        
     }
     if (priv < 4) {
         response.errors.push("You should share at least 'Read' privilege");
-        res.json(response);
-        return;
     }
     
     User.findOne({userName: options.userToShare}
@@ -569,8 +523,9 @@ exports.shareAccess = function(req, res) {
                                               (!withExecAccess ? " ": ", ") : "") +
                                              (withExecAccess ? "Exec " : " ") +
                                              "Access to " + options.docName);
-                         // let the recipient of the message know that he has a new message
-                         io.sockets.volatile.emit("newMessage", JSON.stringify(newMessage));                         
+
+                         // emit message to recipient if online
+                         io.sockets.volatile.emit("newMessage", JSON.stringify(newMessage));
                          
                          // send response back to the client
                          res.json(response);
@@ -586,10 +541,8 @@ exports.shareAccess = function(req, res) {
  * @param res -> response object
  */
 exports.ajaxAutoComplete = function(req, res) {
-    // get the purpose of the auto-complete mission
-    var purpose = req.query.purpose;
-    // get the word to autocomplete for
-    var word = req.query.word;
+    var purpose = req.query.purpose
+    , word = req.query.word;
     
     switch (purpose) {
     case "usernames":
@@ -679,7 +632,7 @@ exports.requestAccess = function(req, res) {
                                  }
                                  response.infos.push("Sent a 'Request More Privileges' message" +
                                                      + " to all the users who have share access"
-                                                     + " to the document, " + options.docName);
+                                                     + " to the document " + options.docName);
                                  
                                  res.json(response);
                              } else {
@@ -707,7 +660,7 @@ exports.getMessages = function(req, res) {
     var response = {errors:[], infos:[], messages:[]};
     
     // try to find messages for the current user
-    Message.find({toUser:req.session.currentUser}
+    Message.find({toUser : req.session.currentUser}
                  , function(err, messages) {
                      if (err) {
                          response.errors.push("Error while retrieving messages. Try again later.");
@@ -763,7 +716,7 @@ exports.grantAccess = function(req, res) {
         return;
     }
     
-    User.findOne({"userName":req.body.userToGrant}
+    User.findOne({"userName" : req.body.userToGrant}
                  , function(err, user) {
                      if (err || !user) {
                          response.errors.push("No user " + req.body.userToGrant 
@@ -801,7 +754,8 @@ exports.grantAccess = function(req, res) {
                              canShare = true;
                              
                              // give user R, W, X access
-                             helpers.giveUserSharePower(req.body.userToGrant, req.body.documentId);
+                             helpers.giveUserSharePower(req.body.userToGrant
+                                                        , req.body.documentId);
                          }
                          
                          // de-couple privileges here
@@ -886,8 +840,7 @@ exports.grantAccess = function(req, res) {
                              
                              // save to user's list of document privileges
                              user.documentsPriv.push(newDocPriv);
-                             user.save(); // save user
-                             
+                             user.save();                              
                              
                              response.infos.push("You just granted "+req.body.userToGrant+" "+
                                                  (readAccess ? "Read" +
@@ -902,8 +855,7 @@ exports.grantAccess = function(req, res) {
                              // has been granted immediately via socket.io
                              io.sockets.volatile.emit("changedDocument"
                                                       , JSON.stringify(newUserDocument));
-                             
-                             
+
                              // send response
                              res.json(response);
                          }   
@@ -956,15 +908,15 @@ exports.acceptAccess = function(req, res) {
                      , writeAccess = false
                      , execAccess = false
                      , canShare = false;
-                     // give user power to be able to share the document with other users
-                     // if he/she has full access
+
                      if (priv == 7) {
                          canShare = true;
                          
                          // give user share power
                          // a user can only get share access when he's given access of 7
                          // which corresponds to R, W, X
-                         helpers.giveUserSharePower(req.session.currentUser, req.body.documentId);
+                         helpers.giveUserSharePower(req.session.currentUser
+                                                    , req.body.documentId);
                      }
                      
                      // de-couple privileges
@@ -1102,20 +1054,18 @@ exports.reloadSession = function(req, res) {
  */
 exports.servePDF = function(req, res) {
     var documentId = req.params.documentId
-    , options;
+    , pdfPath = configs.pdfs.path+documentId+".pdf";
     
-    // find the pdf
-    PDFDoc.findOne({forDocument:documentId}, function(err, doc) {
-                       if (err || !doc) {
-                           req.flash("error"
-                                     , "PDF not found or an error occured while reading the pdf");
-                           res.redirect("back");
-                           return;
-                       }
-                       // write pdf file to user
-                       fs.createReadStream(configs.pdfs.path+documentId+".pdf")
-                           .pipe(res);
-                   });
+    fs.exists(pdfPath, function(exists){
+                  if (!exists) {
+                      req.flash("error", "PDF not found");
+                      res.redirect("back");
+                      return;                   
+                  } else {
+                      fs.createReadStream(configs.pdfs.path+documentId+".pdf")
+                          .pipe(res);                    
+                  }
+              });
 };
 
 /**
@@ -1152,45 +1102,33 @@ exports.compileDoc = function(req, res) {
                                 
                                 var errorStr = "An error occured before or during compilation";
                                 if (err) {
-                                    console.log(err);
                                     response.errors.push(errorStr);
                                     res.json(response);
                                     return;
                                 }
                                 
-                                // create new PDFDoc
-                                var newpdf = new PDFDoc();
-                                newpdf.forDocument = documentId;
-                                newpdf.title = documentId+".pdf";
-                                var tempfile = path.join(dirPath, newpdf.title);
+                                var pdfTitle = documentId+".pdf"
+                                , tempfile = path.join(dirPath, pdfTitle);
                                 fs.copy(tempfile
-                                        , configs.pdfs.path + newpdf.title
+                                        , configs.pdfs.path + pdfTitle
                                         , function(err){
                                             if (err) {
-                                                console.log(err);
                                                 response.errors.push(errorStr);
                                                 res.json(response);
                                                 return;
                                             } else {
                                                 console.log("Successfully saved "
-                                                            + newpdf.title 
+                                                            + pdfTitle
                                                             +" in "+configs.pdfs.path);
-                                                newpdf.save(function(err) {
-                                                                if (err) {
-                                                                    console.log(err);
-                                                                    response.errors.push(errorStr);
-                                                                    res.json(response);
-                                                                    return;
-                                                                }
-                                                                response.infos
-                                                                    .push("Successfully compiled "
-                                                                          + req.body.documentName);
-                                                                // make the compiledDocURI
-                                                                response.compiledDocURI = "/servepdf/"
-                                                                                          + documentId;
-                                                                // send response back to user
-                                                                res.json(response);
-                                                            });
+                                                
+                                                response.infos
+                                                    .push("Successfully compiled "
+                                                          + req.body.documentName);
+                                                // make the compiledDocURI
+                                                response.compiledDocURI = "/servepdf/"
+                                                    + documentId;
+                                                // send response back to user
+                                                res.json(response);
                                             }
                                         });
                             });
