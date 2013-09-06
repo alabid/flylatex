@@ -97,7 +97,6 @@ function DocsManager() {
                              , success: function(response) {
                                  // update alerts
                                  updateAlerts(response);
-                                 console.log(response);
                                  
                                  // update logs for most recent pdf compile
                                  // if any errors found in the log, then display
@@ -214,7 +213,6 @@ function DocsManager() {
      *
      */
     this.goPreviousPage = function() {
-        console.log("going to previous page");
         // get document options
         var docOptions = data.docOptions;
         
@@ -228,7 +226,6 @@ function DocsManager() {
      * Go to next page
      */
     this.goNextPage = function() {
-        console.log("going to next page");
         // get document options
         var docOptions = data.docOptions;
         

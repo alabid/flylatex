@@ -1,3 +1,6 @@
+// load configs from configs JSON here
+var configs = require("../configs");
+
 /*
  * index
  * handles both get and post request on the / page
@@ -16,7 +19,6 @@ exports.index = function(req, res, err){
     req.session.userDocuments = (req.session.userDocuments == undefined ? [] :
                                  req.session.userDocuments);
     
-    
     if (req.session.currentUser && req.session.isLoggedIn) {
         // display the documents for user
         res.render("display-docs",
@@ -27,6 +29,7 @@ exports.index = function(req, res, err){
                     , currentUser: req.session.currentUser
                     , isLoggedIn: req.session.isLoggedIn
                     , userDocuments: req.session.userDocuments          
+                    , port : configs.port
                    });
         
     } else {
@@ -35,6 +38,7 @@ exports.index = function(req, res, err){
                    {title: "Log Into/Sign Into to FLY LATEX!"
                     , shortTitle: "FLY LATEX"
                     , tagLine: "Real Time Collaborative editor in node-js"
-                    , fileSpecificStyle: "not-logged-in.css"});
+                    , fileSpecificStyle: "not-logged-in.css"
+                    , port : configs.port});
     }
 };

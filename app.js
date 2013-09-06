@@ -9,41 +9,42 @@ var express = require('express')
 , app = module.exports = express.createServer()
 , sharejs = require('share').server
 , routes = require('./routes') 
-, MongoStore = require('connect-mongo')(express);
+, MongoStore = require('connect-mongo')(express)
+, configs = require('./configs');
 
 
 
 // Global server Configuration
 app.configure(function(){
-    app.set('views', __dirname + '/views');
-    app.set('view engine', 'ejs');
-    app.use(express.bodyParser());
-    app.use(express.methodOverride());
-    app.use(express.cookieParser());
-    app.use(express.session({
-    secret: "788e6139b25d14de5eecc7fc14bd65529218e8cc",
-    store: new MongoStore({
-        db: "user-auth"
-    })
-    }));
-    app.use(app.router);
-    app.use(express.static(__dirname + '/public'));
-}).dynamicHelpers({
-    info: function(req, res) {
-    return req.flash('info');
-    },
-    error: function(req, res) {
-    return req.flash('error');
-    }
-});
+                  app.set('views', __dirname + '/views');
+                  app.set('view engine', 'ejs');
+                  app.use(express.bodyParser());
+                  app.use(express.methodOverride());
+                  app.use(express.cookieParser());
+                  app.use(express.session({
+                                              secret: "788e6139b25d14de5eecc7fc14bd65529218e8cc",
+                                              store: new MongoStore({
+                                                                        db: "user-auth"
+                                                                    })
+                                          }));
+                  app.use(app.router);
+                  app.use(express.static(__dirname + '/public'));
+              }).dynamicHelpers({
+                                    info: function(req, res) {
+                                        return req.flash('info');
+                                    },
+                                    error: function(req, res) {
+                                        return req.flash('error');
+                                    }
+                                });
 
 app.configure('development', function(){
-    app.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
-});
+                  app.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
+              });
 
 app.configure('production', function(){
-    app.use(express.errorHandler());
-});
+                  app.use(express.errorHandler());
+              });
 
 
 // ========= ShareJS configuration ============
@@ -112,8 +113,7 @@ app.get('/servepdf/:documentId', routes.servePDF);
 
 /** end of ROUTES */
 
-
 // open a port for this server
-app.listen((process.env.PORT || 3000), function(){
-    console.log("Express server listening on port %d in %s mode", app.address().port, app.settings.env);
-});
+app.listen((configs.port || process.env.PORT || 3000), function(){
+               console.log("Express server listening on port %d in %s mode", app.address().port, app.settings.env);
+           });

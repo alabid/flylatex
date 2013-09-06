@@ -92,6 +92,7 @@ var displayErrorsForSignUp = function(res, errors) {
                 , fileSpecificStyle: "sign-up.css"
                 , fileSpecificScript: "application.js"
                 , errors: errors
+                , port : require("../configs").port
                });
 };
 

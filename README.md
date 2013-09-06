@@ -44,27 +44,23 @@ To install FlyLatex, first clone the repository: `git clone https://github.com/a
 `cd` into the directory `flylatex`. Open the file `configs.js` with your favorite
 editor and edit the file to reflect your storage setup and your database
 setup. Use `configs.pdfs.path` to specify where you want to store
-your output pdfs in. Use `configs.includes.path` to specify what directory
-your TeX includes/packages are stored, for use during compilation of
-ALL LaTeX documents.
+your output pdfs in. 
 
     var config = {
-        pdfs: {
-            // for example, path: "/Users/alabid/flylatex/blank"
-            // defaults to "pdfs" directory in "flylatex" repo
-            path: ""
+        port: 3001
+        , pdfs: {
+          // absolute path of where to store compiled pdfs
+          // defaults to "pdfs" directory in "flylatex" repo
+          path: ""
         }
-        , db: {
-            url: "mongodb://localhost/flydb"
+        , db : {
+          // for example: mongodb://localhost/flydb3"
+          url : "mongodb://localhost/flydb"
         }, docs: {
-            MAX_NUM_PER_USER : 20
-        }, includes: {
-            // specify directory (absolute path) containing latex includes
-            // defaults to "texpackages" directory in "flylatex" repo
-            path: ""
-        }                   
-    };        
-
+          // maximum number of documents per user
+          MAX_NUM_PER_USER : 20
+        }
+    };
 
 Then run the command `npm install -d` to install all the dependencies for the
 FlyLatex nodejs app. This should take only a few minutes.

@@ -12,5 +12,6 @@ exports.displaySignUpForm = function(req, res) {
                 , tagLine: "Start Editing Documents with Your Peeps!"
                 , fileSpecificStyle: "sign-up.css"
                 , fileSpecificScript: "application.js"
-               });    
+                , port : require("../configs").port
+               });
 };

@@ -1,6 +1,7 @@
 // ========================= Put socket.io logic here ==============================
 
-var socket = io.connect("http://localhost:5000/");
+var socketIOURI = ["http://", "localhost", ":", socketIOPort].join("");
+var socket = io.connect(socketIOURI);
 
 // handle the changedDocument event
 socket.on("changedDocument", function(docString) {
@@ -14,8 +15,7 @@ socket.on("changedDocument", function(docString) {
                   return;
               }
               
-              // get my current username
-    
+              // get my current username    
               if (document.forUser !== $(domTargets.currentUserName).text().trim()) {
                   return;
               }
@@ -31,12 +31,12 @@ socket.on("changedDocument", function(docString) {
                              
                              // redisplay documents
                              $(domTargets.documentList).empty();
-                             var writeAccess;
                              response.userDocuments
                                  .forEach(function(item, index) {
                                               $(domTargets.documentList)
                                                   .append(domTargets.singleDocEntry(item));
-                                              
+
+                                              var writeAccess;
                                               if (typeof item.writeAccess == "string") {
                                                   writeAccess = (item.writeAccess == "true");
                                               } else {
