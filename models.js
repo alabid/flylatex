@@ -13,30 +13,38 @@ var crypto = require("crypto")
 
 // load configurations here
 , configs = require("./configs")
+
 , fs = require("fs-extra");
 
 var DocPrivilege = new Schema ({
     access: {type: Number
-         , default: 7
+         , default: 6
         }
     /*
-     * 7 - full
      * 6 - read and write
-     * 5 - read and execute
      * 4 - read only
-     * 3 - write and execute
      * 2 - write only
-     * 1 - execute only
      * 0 - none
-     *
-     * 4 -> read
-     * 2 -> write
-     * 1 -> execute
      */
-    , documentId: ObjectId
-    , documentName: String
+    , _id: ObjectId
+    , name: String
 });
 
+
+var Document = new Schema ({
+    name: String
+    , data: Buffer
+    , lastModified: Date
+    , createdAt: {type: Date
+          , default: new Date()
+         }
+    /* 
+     * latex source file -> 0
+     * other types to come...
+     */
+    , documentType: Number 
+    , usersWithShareAccess: [String] // store userNames of users with full access to doc
+});
 
 var User = new Schema ({
     userName: {type: String
@@ -76,21 +84,6 @@ var Message = new Schema ({
     , timeSent: {type: Date
          , default: new Date()
         }
-});
-
-var Document = new Schema ({
-    name: String
-    , data: Buffer
-    , lastModified: Date
-    , createdAt: {type: Date
-          , default: new Date()
-         }
-    /* 
-     * latex source file -> 0
-     * other types to come...
-     */
-    , documentType: Number 
-    , usersWithShareAccess: [String] // store userNames of users with full access to doc
 });
 
 /*

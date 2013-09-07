@@ -66,7 +66,7 @@ var openDocuments = {};
  * * currentDoc
  * * userDocuments - this is an abstraction of the real Document model.
      So it contains different attributes.
-     contains: id, name, readAccess, writeAccess, execAccess, canShare
+     contains: id, name, readAccess, writeAccess, canShare
  * * errors
  * * infos
 */
@@ -107,8 +107,8 @@ exports.preIndex = function(req, res, next) {
                          } 
                          
                          if (!user || typeof user.authenticate != "function") {
-                             req.flash("error", "There's no user called " 
-                                       + req.body.username + " in our database");
+                             req.flash("error", "There's no user called '" 
+                                       + req.body.username + "' in our database");
                              res.redirect('back');
                              return;
                          } else if (!user.authenticate(req.body.password)) {
@@ -191,8 +191,8 @@ exports.processSignUpData = function(req, res) {
         User.find({userName: newUser.userName}
                   , function(err, users) {
                       if (users.length > 0) {
-                          errors["userNameTaken"] = "The username " + 
-                                                    newUser.userName + " is already taken";
+                          errors["userNameTaken"] = "The username '" + 
+                                                    newUser.userName + "' is already taken";
                           isError = true;
                           
                           helpers.displayErrorsForSignUp(res, errors);
@@ -251,7 +251,6 @@ exports.createDoc = function(req, res) {
                                     , name:null
                                     , readAccess: true
                                     , writeAccess: true
-                                    , execAccess: true
                                     , canShare: true}
                    };
     
@@ -295,9 +294,9 @@ exports.createDoc = function(req, res) {
             // by default, document privilege for the 
             // current user is 7 (full access)
             var docPriv = new DocPrivilege();
-            docPriv.documentId = newDoc._id;
-            docPriv.documentName = newDoc.name;
-            
+            docPriv._id = newDoc._id;
+            docPriv.name = newDoc.name;            
+
             // new user document to send off to front end for display
             var newUserDocument = {};
             
@@ -317,22 +316,21 @@ exports.createDoc = function(req, res) {
                              user.save();
                              
                              // add to the user's session data
-                             newUserDocument.id = docPriv.documentId;
-                             newUserDocument.name = docPriv.documentName;
+                             newUserDocument.id = docPriv._id;
+                             newUserDocument.name = docPriv.name;
                              
                              // user creating document should have full access to document
                              // R,W,X (and so can share the document with anyone)
                              newUserDocument.readAccess = true;
                              newUserDocument.writeAccess = true;
-                             newUserDocument.execAccess = true;
                              newUserDocument.canShare = true;
                              
                              req.session.userDocuments.push(newUserDocument);
                              response.newDocument = newUserDocument;
                              
                              // inform user of new document creation
-                             response.infos.push("Just created the new Document: " 
-                                                 + req.body.docName + ". Hooray!");
+                             response.infos.push("Just created the new Document '" 
+                                                 + req.body.docName + "'. Hooray!");
                              res.json(response);
                          });
         }
@@ -364,6 +362,7 @@ exports.deleteDoc = function(req, res) {
         res.json(response);
         return;
     }
+
     // remove the document from Users collections
     User.findOne({userName: req.session.currentUser}
                  , function(err, user) {
@@ -375,11 +374,14 @@ exports.deleteDoc = function(req, res) {
                          return;
                      }
                      for (var i = 0; i < user.documentsPriv.length; i++) {
-                         if (user.documentsPriv[i].documentId == docId) {
-                             docName = user.documentsPriv[i].documentName;
+                         console.log("comparing "+user.documentsPriv[i]._id
+                                     +" with " + docId);
+                         if (user.documentsPriv[i]._id.equals(docId)) {
+                             docName = user.documentsPriv[i].name;
                              user.documentsPriv.splice(i, 1);
                              
                              console.log("Removed documentsPriv with documentId: " + docId);
+                             break;
                          }
                      }
                      
@@ -388,13 +390,13 @@ exports.deleteDoc = function(req, res) {
                      
                      // change session object to reflect new change in user's documents
                      for (i = 0; i < req.session.userDocuments.length; i++) {        
-                         if (req.session.userDocuments[i].id == docId) {
+                         if (String(req.session.userDocuments[i].id) == String(docId)) {
                              req.session.userDocuments.splice(i,1);
                              
                              console.log("Removed userDocument with _id "
                                          + docId + " from session object");
                          }
-                     }                   
+                     }   
 
                      var removeDocs = function(err, docs) {
                          if (docs.length == 0) {
@@ -409,6 +411,7 @@ exports.deleteDoc = function(req, res) {
                                                  console.log("Error while deleting document with _id " 
                                                              + docId + " completely from the database");
                                              }
+                                             res.json(response);
                                          });
                          } else {
                              // some other user(s) has access to this document
@@ -438,6 +441,12 @@ exports.deleteDoc = function(req, res) {
                                                           
                                                           // save the document
                                                           doc.save();
+
+                                                          if (response.errors.length == 0 && docName.length > 0) {
+                                                              response.infos.push("Successfully deleted the document '" 
+                                                                                  + docName + "'");
+                                                              res.json(response);
+                                                          }
                                                       }
                                                   }
                                               });
@@ -446,12 +455,7 @@ exports.deleteDoc = function(req, res) {
                      
                      // remove the document from Documents collections
                      // if no other user has it
-                     DocPrivilege.find({documentId:docId}, removeDocs);
-                     
-                     if (response.errors.length == 0 && docName.length > 0) {
-                         response.infos.push("Successfully deleted the document " + docName);
-                         res.json(response);
-                     }
+                     User.find({"documentsPriv._id":docId}, removeDocs);
                  });
 };
 
@@ -467,8 +471,7 @@ exports.shareAccess = function(req, res) {
     var options = req.body.options;
     
     var priv = ((options.withReadAccess == "true" ? 4 : 0) +
-                (options.withWriteAccess == "true" ? 2 : 0) +
-                (options.withExecAccess == "true" ? 1 : 0));
+                (options.withWriteAccess == "true" ? 2 : 0));
     
     if (!(req.session.currentUser && req.session.isLoggedIn)) {
         response.errors.push("You are not logged in. So you can't share access");
@@ -511,18 +514,15 @@ exports.shareAccess = function(req, res) {
                          newMessage.save();
                          
                          var withReadAccess = (options.withReadAccess == 'true')
-                         , withWriteAccess = (options.withWriteAccess == 'true')
-                         , withExecAccess = (options.withExecAccess == 'true');
+                         , withWriteAccess = (options.withWriteAccess == 'true');
                          
                          // send success message
-                         response.infos.push("You just invited "+options.userToShare+" to have "+
+                         response.infos.push("You just invited '"+options.userToShare+"' to have "+
                                              (withReadAccess ? "Read" +
-                                              ((!withWriteAccess && !withExecAccess) 
-                                               ? " ": ", ") :"")+
-                                             (withWriteAccess ? "Write" +
-                                              (!withExecAccess ? " ": ", ") : "") +
-                                             (withExecAccess ? "Exec " : " ") +
-                                             "Access to " + options.docName);
+                                              ((!withWriteAccess) 
+                                               ? " ": ", ") :"") +
+                                             (withWriteAccess ? "Write" : " ")+
+                                             " Access to '" + options.docName + "'");
 
                          // emit message to recipient if online
                          io.sockets.volatile.emit("newMessage", JSON.stringify(newMessage));
@@ -581,8 +581,7 @@ exports.requestAccess = function(req, res) {
     var options = req.body.options;
     
     var priv = ((options.withReadAccess == "true" ? 4 : 0) +
-                (options.withWriteAccess == "true" ? 2 : 0) +
-                (options.withExecAccess == "true" ? 1 : 0));
+                (options.withWriteAccess == "true" ? 2 : 0));
     
     // try to return error messages if any errors found
     if (!(req.session.currentUser && req.session.isLoggedIn)) {
@@ -604,7 +603,7 @@ exports.requestAccess = function(req, res) {
         res.json(response);
         return;
     }
-    // first find the users that have share access (7:R,W,X) to the document
+    // first find the users that have share access (6:R,W) to the document
     Document.findOne({_id: options.docId}
                      , function(err, doc) {
                          if (err) {
@@ -630,9 +629,9 @@ exports.requestAccess = function(req, res) {
                                      io.sockets.volatile.emit("newMessage", JSON.stringify(newMessage));
                                      
                                  }
-                                 response.infos.push("Sent a 'Request More Privileges' message" +
+                                 response.infos.push("Sent a 'Request More Privileges' message"
                                                      + " to all the users who have share access"
-                                                     + " to the document " + options.docName);
+                                                     + " to the document '" + options.docName + "'");
                                  
                                  res.json(response);
                              } else {
@@ -676,7 +675,6 @@ exports.getMessages = function(req, res) {
                                  // set privileges fromUser is requesting
                                  item.readAccess = false;
                                  item.writeAccess = false;
-                                 item.execAccess = false;
                                  
                                  if (priv >= 4) {
                                      item.readAccess = true;
@@ -685,9 +683,6 @@ exports.getMessages = function(req, res) {
                                  if (priv >= 2) {
                                      item.writeAccess = true;
                                      priv -= 2;
-                                 }
-                                 if (priv == 1) {
-                                     item.execAccess = true;
                                  }
                                  response.messages.push(item);
                              });
@@ -719,8 +714,8 @@ exports.grantAccess = function(req, res) {
     User.findOne({"userName" : req.body.userToGrant}
                  , function(err, user) {
                      if (err || !user) {
-                         response.errors.push("No user " + req.body.userToGrant 
-                                              + " exists or an error occured "
+                         response.errors.push("No user '" + req.body.userToGrant 
+                                              + "' exists or an error occured "
                                               + "while looking for this user");
                          res.json(response);
                      } else {
@@ -737,7 +732,9 @@ exports.grantAccess = function(req, res) {
                          
                          user.documentsPriv
                              .forEach(function(item, index) {
-                                          if (item.documentId == req.body.documentId) {
+                                          console.log("comparing " + item._id + " with "
+                                                      + req.body.documentId);
+                                          if (item._id.equals(req.body.documentId)) {
                                               userHasDoc = true;
                                           }
                                       });
@@ -745,12 +742,11 @@ exports.grantAccess = function(req, res) {
                          var priv = req.body.access
                          , readAccess = false
                          , writeAccess = false
-                         , execAccess = false
                          , canShare = false;
                          
                          // give user power to be able to share the document with other users
                          // if he/she has full access
-                         if (priv == 7) {
+                         if (priv == 6) {
                              canShare = true;
                              
                              // give user R, W, X access
@@ -767,9 +763,6 @@ exports.grantAccess = function(req, res) {
                              writeAccess = true;
                              priv -= 2;
                          }
-                         if (priv == 1) {
-                             execAccess = true;
-                         }
                          
                          // create new user document
                          var newUserDocument = {
@@ -777,18 +770,18 @@ exports.grantAccess = function(req, res) {
                              , "name": req.body.documentName
                              , "readAccess" : readAccess
                              , "writeAccess" : writeAccess
-                             , "execAccess" : execAccess
                              , "canShare" : canShare
                              , "forUser" : req.body.userToGrant
-                         };
-                         
+                         };                         
                          
                          if (userHasDoc) {
                              var upgrading = false;
                              
                              // if userToShare already has the document, upgrade access if possible
                              for (var i = 0; i < user.documentsPriv.length; i++) {
-                                 if (user.documentsPriv[i].documentId == newUserDocument.id
+                                 console.log("comparing " + user.documentsPriv[i]._id + " with "
+                                             + newUserDocument.id);
+                                 if (user.documentsPriv[i]._id.equals(newUserDocument.id)
                                      && user.documentsPriv[i].access < req.body.access) {
                                      upgrading = true;
                                      
@@ -806,9 +799,9 @@ exports.grantAccess = function(req, res) {
                                                });
                                      
                                      // send back message
-                                     response.infos.push("You just upgraded the privileges of "
-                                                         + req.body.userToGrant + " for the document "
-                                                         + req.body.documentName);
+                                     response.infos.push("You just upgraded the privileges of '"
+                                                         + req.body.userToGrant + "' for the document '"
+                                                         + req.body.documentName + "'");
                                      
                                      // notify userToShare you just upgraded his privileges
                                      // on some document
@@ -821,9 +814,10 @@ exports.grantAccess = function(req, res) {
                              }
                              if (!upgrading) {
                                  // send back duplicate message
-                                 response.infos.push(req.body.userToGrant
-                                                     + " already has higher or equal access"
-                                                     + " to the document, " + req.body.documentName);
+                                 response.infos.push("'" + req.body.userToGrant
+                                                     + "' already has higher or equal access"
+                                                     + " to the document '"
+                                                     + req.body.documentName + "'");
                                  res.json(response);
                              }
                          } else {
@@ -832,24 +826,28 @@ exports.grantAccess = function(req, res) {
                              
                              var newDocPriv = new DocPrivilege();
                              newDocPriv.access = parseInt(req.body.access);
-                             newDocPriv.documentName = req.body.documentName;
-                             newDocPriv.documentId = req.body.documentId;
-                             
-                             // save
-                             newDocPriv.save();
-                             
+                             newDocPriv.name = req.body.documentName;
+                             newDocPriv._id = req.body.documentId; 
+
+                             for (var i = 0; i < user.documentsPriv.length; i++) {
+                                 console.log("comparing "+user.documentsPriv[i]._id
+                                            +" with " + newDocPriv._id);
+                                 if (user.documentsPriv[i]._id.equals(newDocPriv._id)) {
+                                     user.documentsPriv.splice(i, 1);
+                                     break;
+                                 }
+                             }
                              // save to user's list of document privileges
                              user.documentsPriv.push(newDocPriv);
                              user.save();                              
                              
-                             response.infos.push("You just granted "+req.body.userToGrant+" "+
+                             response.infos.push("You just granted '"+req.body.userToGrant+"' "+
                                                  (readAccess ? "Read" +
-                                                  ((!writeAccess && !execAccess) 
+                                                  ((!writeAccess) 
                                                    ? " ": ", ") :"")+
-                                                 (writeAccess ? "Write" +
-                                                  (!execAccess ? " ": ", ") : "") +
-                                                 (execAccess ? "Exec " : " ") +
-                                                 "Access to " + req.body.documentName);
+                                                 (writeAccess ? "Write" : " ") +
+                                                 " Access to '" 
+                                                 + req.body.documentName + "'");
                              
                              // notify the user just granted access that his/her request
                              // has been granted immediately via socket.io
@@ -898,7 +896,7 @@ exports.acceptAccess = function(req, res) {
                      var userHasDoc = false;
                      req.session.userDocuments
                          .forEach(function(item, index) {       
-                                      if (item.id == req.body.documentId) {
+                                      if (String(item.id) == String(req.body.documentId)) {
                                           userHasDoc = true;
                                       }
                                   });
@@ -906,15 +904,14 @@ exports.acceptAccess = function(req, res) {
                      var priv = req.body.access 
                      , readAccess = false
                      , writeAccess = false
-                     , execAccess = false
                      , canShare = false;
 
-                     if (priv == 7) {
+                     if (priv == 6) {
                          canShare = true;
                          
                          // give user share power
-                         // a user can only get share access when he's given access of 7
-                         // which corresponds to R, W, X
+                         // a user can only get share access when he's given access of 6
+                         // which corresponds to R, W
                          helpers.giveUserSharePower(req.session.currentUser
                                                     , req.body.documentId);
                      }
@@ -928,9 +925,6 @@ exports.acceptAccess = function(req, res) {
                          writeAccess = true;
                          priv -= 2;
                      }
-                     if (priv == 1) {
-                         execAccess = true;
-                     }
                      
                      // new user document
                      var newUserDocument = {
@@ -938,7 +932,6 @@ exports.acceptAccess = function(req, res) {
                          , "name": req.body.documentName
                          , "readAccess" : readAccess
                          , "writeAccess" : writeAccess
-                         , "execAccess" : execAccess
                          , "canShare" : canShare
                      };
                      
@@ -947,7 +940,7 @@ exports.acceptAccess = function(req, res) {
                          var upgrading = false;
                          
                          for (var i = 0; i < user.documentsPriv.length; i++) {
-                             if (user.documentsPriv[i].documentId == newUserDocument.id
+                             if (String(user.documentsPriv[i]._id) == String(newUserDocument.id)
                                  && user.documentsPriv[i].access < req.body.access) {
                                  upgrading = true;
                                  
@@ -958,14 +951,14 @@ exports.acceptAccess = function(req, res) {
                                  user.save();
                                  
                                  // send back  message
-                                 response.infos.push("You just upgraded your rights to the document "
-                                                     + newUserDocument.name);
+                                 response.infos.push("You just upgraded your rights to the document '"
+                                                     + newUserDocument.name + "'");
                                  break;
                              }
                          }
                          if (upgrading) {
                              for (i = 0; i < req.session.userDocuments.length; i++) {
-                                 if (req.session.userDocuments[i].id == newUserDocument.id) {
+                                 if (String(req.session.userDocuments[i].id) == String(newUserDocument.id)) {
                                      // upgrade all we've got
                                      req.session.userDocuments[i] = newUserDocument;
                                  }
@@ -974,8 +967,8 @@ exports.acceptAccess = function(req, res) {
                              return;
                          }
                          // send back duplicate message
-                         response.infos.push("You already have higher or equal access to the document " 
-                                             + newUserDocument.name);
+                         response.infos.push("You already have higher or equal access to the document '" 
+                                             + newUserDocument.name + "'");
                          res.json(response);     
                      } else {        
                          // user should redisplay list of documents
@@ -984,11 +977,18 @@ exports.acceptAccess = function(req, res) {
                          // user doesn't already have access to document
                          var newDocPriv = new DocPrivilege();
                          newDocPriv.access = parseInt(req.body.access);
-                         newDocPriv.documentName = req.body.documentName;
-                         newDocPriv.documentId = req.body.documentId;
-                         
-                         // save
-                         newDocPriv.save();
+                         newDocPriv.name = req.body.documentName;
+                         newDocPriv._id = req.body.documentId;
+
+                         for (var i = 0; i < user.documentsPriv.length; i++) {
+                             console.log("comparing " + user.documentsPriv[i]._id + " with "
+                                         + newDocPriv._id);
+
+                             if (user.documentsPriv[i]._id.equals(newDocPriv._id)) {
+                                 user.documentsPriv.splice(i, 1);
+                                 break;
+                             }
+                         }
                          
                          // save to user's list of document privileges
                          user.documentsPriv.push(newDocPriv);
@@ -1003,13 +1003,12 @@ exports.acceptAccess = function(req, res) {
                          // send acceptance message to user
                          response.infos.push("You just accepted "+
                                              (readAccess ? "Read" +
-                                              ((!writeAccess && !execAccess) 
+                                              ((!writeAccess) 
                                                ? " ": ", ") :"")+
-                                             (writeAccess ? "Write" +
-                                              (!execAccess ? " ": ", ") : "") +
-                                             (execAccess ? "Exec " : " ") +
-                                             "Access to " + req.body.documentName +
-                                             " from " + req.body.acceptFromUser);
+                                             (writeAccess ? "Write" : " ") + 
+                                             " Access to '" + req.body.documentName +
+                                             "' from user '" + req.body.acceptFromUser
+                                             + "'");
                          res.json(response);
                      }
                  });
@@ -1040,7 +1039,8 @@ exports.reloadSession = function(req, res) {
                          
                          // load userDocuments
                          response.userDocuments = req.session.userDocuments;
-                         
+                         console.log("response in reload session=>");
+                         console.log(response);
                          res.json(response);
                      });
     }
@@ -1122,11 +1122,12 @@ exports.compileDoc = function(req, res) {
                                                             +" in "+configs.pdfs.path);
                                                 
                                                 response.infos
-                                                    .push("Successfully compiled "
-                                                          + req.body.documentName);
+                                                    .push("Successfully compiled '"
+                                                          + req.body.documentName
+                                                          + "'");
                                                 // make the compiledDocURI
                                                 response.compiledDocURI = "/servepdf/"
-                                                    + documentId;
+                                                                          + documentId;
                                                 // send response back to user
                                                 res.json(response);
                                             }
@@ -1255,15 +1256,14 @@ exports.openDocument = function(req, res) {
                              , "sharesWith" : sharesWith
                              , "readAccess" : docInSession.readAccess
                              , "writeAccess" : docInSession.writeAccess
-                             , "execAccess" : docInSession.execAccess
                              , "canShare" : docInSession.canShare
                          };
                          
                          // render the document you just opened
                          res.render("open-document"
-                                    , { title: "Viewing the document, "+ doc.name
+                                    , { title: "Viewing the document '"+ doc.name + "'"
                                         , shortTitle: "Fly Latex"
-                                        , tagLine: "Viewing the document, " + doc.name
+                                        , tagLine: "Viewing the document '" + doc.name + "'"
                                         , fileSpecificStyle: "open-document.css"
                                         , fileSpecificScript: "open-document.js"
                                         , userDocument: userDoc

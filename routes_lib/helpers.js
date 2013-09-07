@@ -15,11 +15,12 @@ var Document = mongoose.model("Document");
  */
 var cloneObject = function(obj) {
     var clone = {};
-    for(var i in obj) {
-        if(typeof(obj[i])=="object")
-            clone[i] = cloneObject(obj[i]);
-        else
-            clone[i] = obj[i];
+    for (var i in obj) {
+        if (typeof(obj[i])=="object") {
+            clone[i] = cloneObject(obj[i]);   
+        } else {
+            clone[i] = obj[i];            
+        }
     }
     return clone;
 };
@@ -43,12 +44,11 @@ var loadUser = function(user) {
     
     user.documentsPriv.forEach(
         function(item, i) {
-            userDocument.id = item.documentId;
-            userDocument.name = item.documentName;
+            userDocument.id = item._id;
+            userDocument.name = item.name;
             // set defaults here
             userDocument.readAccess = false;
             userDocument.writeAccess = false;
-            userDocument.execAccess = false;
             userDocument.canShare = false;
             
             // set privileges here
@@ -62,13 +62,10 @@ var loadUser = function(user) {
                 userDocument.writeAccess = true;
                 priv -= 2;
             }
-            if (priv == 1) {
-                userDocument.execAccess = true;
-            }
 
-            // if user has R, W, X access, he can share the document
+            // if user has R, W access, he can share the document
             // else he cannot
-            if (item.access == 7) {
+            if (item.access == 6) {
                 userDocument.canShare = true;
             }
             
@@ -107,7 +104,7 @@ var displayErrorsForSignUp = function(res, errors) {
 var searchForDocsInSession = function(documentId, session) {
     if (session.userDocuments != undefined) {
         for (var i = 0; i < session.userDocuments.length; i++) {
-            if (session.userDocuments[i].id == documentId) {
+            if (String(session.userDocuments[i].id) == String(documentId)) {
                 return session.userDocuments[i];
             }
         }
@@ -121,7 +118,6 @@ var searchForDocsInSession = function(documentId, session) {
  *
  * @param docName -> document name
  * @param currentUser -> created by
- * @return DocPrivilege -> representing new document
  */
 var createNewDocument = function(docName, currentUser) {
     // create the document (with some properties)

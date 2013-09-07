@@ -89,7 +89,7 @@ app.post('/grantaccess', routes.grantAccess);
 // for accepting invitation to have access to a document
 app.post('/acceptaccess', routes.acceptAccess);
 
-// add a new document to my list of sessions
+// add a new document to my session
 app.post('/adddoctosession', routes.addNewDocument);
 
 // reload the documents in the session of the current user

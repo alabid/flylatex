@@ -274,21 +274,13 @@ function DocsManager() {
      */
     this.reqWriteAccess = function(id, name) {
         displayRequestAccess('write', id, name);    
-    };
-    
-    /*
-     * reqExecAccess
-     * @param _id -> id of document to request execute access to
-     */
-    this.reqExecAccess = function(id, name) {
-        displayRequestAccess('exec', id, name);
-    };
+    };    
     
     /*
      * displayRequestAccess ->
      * open a light box that shows the accesses a user's requesting for.
      * 
-     * @param type: either read, write, or exec or a list of privileges
+     * @param type: either read, write or a list of privileges
      */
     var displayRequestAccess = function(privs, id, name) {
         if (typeof privs == "undefined")  {
@@ -309,8 +301,7 @@ function DocsManager() {
         var requestObj = {docId: id
                           , docName: name
                           , read: false
-                          , write: false
-                          , exec: false};
+                          , write: false };
         
         privsForDoc.forEach(function(item, index){
                                 requestObj[item] = true;
@@ -407,7 +398,6 @@ function DocsManager() {
      * , "sharesWith":
      * , "readAccess" :
      * , "writeAccess" :
-     * , "execAccess" : 
      * , "canShare" : 
      * };
      *
@@ -458,7 +448,7 @@ function DocsManager() {
      * delete the document
      */
     this.deleteDoc = function(docId, docName) {
-        bootbox.confirm("Are you sure you want to delete the document, " + docName + " ?"
+        bootbox.confirm("Are you sure you want to delete the document '" + docName + "' ?"
                         , function(yes) {
                             if (yes) {
                                 $.ajax({type: "DELETE"
@@ -473,14 +463,6 @@ function DocsManager() {
                                                 .remove();
                                             
                                             docs_manager.hideDeleteButtons();
-                                            
-                                            // remove from openedDocs, openedDocsWriteable
-                                            // if document was opened
-                                            if (openedDocs.indexOf(docId) != -1) {
-                                                var  i = openedDocs.indexOf(docId);
-                                                openedDocs.splice(i, 1);
-                                                openedDocsWriteable.splice(i, 1);
-                                            }
                                         }
                                        });
                             }
@@ -535,14 +517,12 @@ function DocsManager() {
      * @param userToShare: username of the user to share document with
      * @param withReadAccess: grant userToShare read access
      * @param withWriteAccess: grant userToShare write access
-     * @param withExecAccess: grant userToShare exec access
      */
     this.shareDoc = function(docId, docName
                              ,userToShare 
-                             , withReadAccess, withWriteAccess, withExecAccess) {
+                             , withReadAccess, withWriteAccess) {
         withReadAccess = (withReadAccess === "true");
         withWriteAccess = (withWriteAccess === "true");
-        withExecAccess = (withExecAccess === "true");
         
         // send message to other user notifying him that you want to grant him
         // access to a document
@@ -552,7 +532,6 @@ function DocsManager() {
             , "userToShare": userToShare
             , "withReadAccess":withReadAccess
             , "withWriteAccess":withWriteAccess
-            , "withExecAccess":withExecAccess
         };
         user_messages.sendMessage('shareAccess', options);
     };
@@ -563,14 +542,12 @@ function DocsManager() {
      * @param docName: name of document to request access to
      * @param withReadAccess: request read access
      * @param withWriteAccess: request write access
-     * @param withExecAccess: request exec access
      */
     this.requestDoc = function(docId, docName
-                               , withReadAccess, withWriteAccess, withExecAccess) {
+                               , withReadAccess, withWriteAccess) {
         
         withReadAccess = (withReadAccess === "true");
         withWriteAccess = (withWriteAccess === "true");
-        withExecAccess = (withExecAccess === "true");
         
         // send message to all users that have share access to the document
         // that has documentId, docId
@@ -581,7 +558,6 @@ function DocsManager() {
             ,"docName":docName
             , "withReadAccess":withReadAccess
             , "withWriteAccess":withWriteAccess
-            , "withExecAccess":withExecAccess
         };
         user_messages.sendMessage('requestAccess', options);
     };
@@ -655,10 +631,7 @@ function UserMessages() {
                                             item.isShareAccess = item.messageType == 1;
                                             // temporarily use priv here
                                             priv = item.access;
-                                            item.eitherWriteOrExecAccess = priv != 4; // has either write or exec privilege
-                                            
-                                            priv = item.access; 
-                                            item.readAccess = item.writeAccess = item.execAccess = false;
+                                            item.readAccess = item.writeAccess = false;
                                             // de-couple privileges
                                             if (priv >= 4) {
                                                 priv -= 4;
@@ -668,9 +641,6 @@ function UserMessages() {
                                                 priv -= 2;
                                                 item.writeAccess = true;
                                             }
-                                            if (priv == 1) {
-                                                item.execAccess = true;
-                                                         }
                                             messagesForTemplate.push(item);
                                         });
                            
@@ -687,7 +657,7 @@ function UserMessages() {
      * @param messageType -> type of message to send
      * @param options -> map of message meta-data and content
      *  options = {'docId':,'docName':,['userToShare':],'withReadAccess':,
-     *             'withWriteAccess':,'withExecAccess':}
+     *             'withWriteAccess':,}
      * 
      */
     this.sendMessage = function(messageType, options) {

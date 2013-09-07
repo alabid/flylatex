@@ -13,11 +13,6 @@
       {{else}}
       <button onclick="docs_manager.reqWriteAccess('{{id}}', '{{name}}');" class="btn">Write</button>
       {{/if}}
-      {{#if execAccess}}
-      <button disabled class="btn">Exec</button> 
-      {{else}}
-      <button onclick="docs_manager.reqExecAccess('{{id}}', '{{name}}');" class="btn">Exec</button>
-      {{/if}}
       {{#if canShare}}
       <button class="btn" onclick="docs_manager.openShareDoc('{{id}}', '{{name}}');;">Share</button>
       {{/if}}
@@ -55,9 +50,8 @@
 	{{#if isRequestAccess}} <!-- requestAccess-->
 	<div class="request-access-box">
           <b>{{fromUser}}</b> is requesting 
-	  {{#if readAccess}}Read{{#if eitherWriteOrExecAccess }}, {{/if}}{{/if}} 
-	  {{#if writeAccess}}Write{{#if execAccess}}, {{/if}}{{/if}}
-	  {{#if execAccess}}Exec{{/if}}
+	  {{#if readAccess}}Read{{/if}} 
+	  {{#if writeAccess}}, Write{{/if}}
 	  <b>Access</b> to <strong>{{documentName}}</strong>
 	  <form onsubmit="return false;">
 	    <button onclick="user_messages.grantAccess('{{fromUser}}','{{documentId}}', '{{documentName}}', {{access}}); $(this).closest('li').remove();" class="btn btn-primary">Grant</button>
@@ -68,9 +62,8 @@
 	{{#if isShareAccess}} <!-- shareAccess -->
 	<div class="share-access-box">
 	  <b>{{fromUser}}</b> wants to give you
-	  {{#if readAccess}}Read{{#if eitherWriteOrExecAccess }}, {{/if}}{{/if}} 
-	  {{#if writeAccess}}Write{{#if execAccess}}, {{/if}}{{/if}}
-	  {{#if execAccess}}Exec{{/if}}
+	  {{#if readAccess}}Read{{/if}}
+	  {{#if writeAccess}}, Write{{/if}}
 	  <b>Access</b> to <strong>{{documentName}}</strong>
 	  <form onsubmit="return false;">
 	    <button onclick="user_messages.acceptAccess('{{fromUser}}', '{{documentId}}', '{{documentName}}', {{access}}); $(this).closest('li').remove();" class="btn btn-primary">Accept</button>
@@ -100,16 +93,14 @@
 
 	<input type="hidden" name="read-access" value="false"/>
 	<input type="hidden" name="write-access" value="false"/>
-	<input type="hidden" name="exec-access" value="false"/>
 	 
 	<div class="btn-group">
 	  <button class="btn" onclick="var box=$(this).closest('form').find('[name=read-access]');box.val() == 'false' ? box.val('true') : box.val('false') ; $(this).toggleClass('btn-success');return false;">Read</button>
 	  <button class="btn" onclick="var box=$(this).closest('form').find('[name=write-access]');box.val() == 'false' ? box.val('true') : box.val('false') ; $(this).toggleClass('btn-success'); return false;">Write</button>
-	  <button class="btn" onclick="var box=$(this).closest('form').find('[name=exec-access]');box.val() == 'false' ? box.val('true') : box.val('false') ; $(this).toggleClass('btn-success');return false;">Exec</button>
 	</div>
 	<strong>Access</strong>
 	to document <b>{{docName}}</b>
-	<button type="submit" onclick="docs_manager.shareDoc('{{docId}}', '{{docName}}', $(this).closest('form').find('[name=userToShare]').val(), $(this).closest('form').find('[name=read-access]').val() , $(this).closest('form').find('[name=write-access]').val() , $(this).closest('form').find('[name=exec-access]').val());$('#share-modal').modal('hide');return false;" class="btn btn-primary pull-right">Share</button>
+	<button type="submit" onclick="docs_manager.shareDoc('{{docId}}', '{{docName}}', $(this).closest('form').find('[name=userToShare]').val(), $(this).closest('form').find('[name=read-access]').val() , $(this).closest('form').find('[name=write-access]').val());$('#share-modal').modal('hide');return false;" class="btn btn-primary pull-right">Share</button>
       </form>
     </div>
   </div>
@@ -142,21 +133,13 @@
 	       value="false"
 	       {{/if}}	       
 	/>
-	<input type="hidden" name="exec-access"
-	       {{#if exec}}
-	       value="true"
-	       {{else}}
-	       value="false"
-	       {{/if}}	
-	/>	 
 	<div class="btn-group">
 	  <button class="btn {{#if read}}btn-success{{/if}}" onclick="var box=$(this).closest('form').find('[name=read-access]');box.val() == 'false' ? box.val('true') : box.val('false') ; $(this).toggleClass('btn-success');return false;">Read</button>
 	  <button class="btn {{#if write}}btn-success{{/if}}" onclick="var box=$(this).closest('form').find('[name=write-access]');box.val() == 'false' ? box.val('true') : box.val('false') ; $(this).toggleClass('btn-success'); return false;">Write</button>
-	  <button class="btn {{#if exec}}btn-success{{/if}}" onclick="var box=$(this).closest('form').find('[name=exec-access]');box.val() == 'false' ? box.val('true') : box.val('false') ; $(this).toggleClass('btn-success');return false;">Exec</button>
 	</div>
 	<strong>Access</strong>
 	to document <b>{{docName}}</b>
-	<button type="submit" onclick="docs_manager.requestDoc('{{docId}}', '{{docName}}', $(this).closest('form').find('[name=read-access]').val() , $(this).closest('form').find('[name=write-access]').val() , $(this).closest('form').find('[name=exec-access]').val());$('#request-access').modal('hide');return false;" class="btn btn-primary pull-right">Send Request</button>
+	<button type="submit" onclick="docs_manager.requestDoc('{{docId}}', '{{docName}}', $(this).closest('form').find('[name=read-access]').val() , $(this).closest('form').find('[name=write-access]').val());$('#request-access').modal('hide');return false;" class="btn btn-primary pull-right">Send Request</button>
       </form>
     </div>
   </div>
