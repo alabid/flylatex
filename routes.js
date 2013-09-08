@@ -18,6 +18,8 @@ var mongoose = require("mongoose")
 // flylatex directory
 , flylatexdir = __dirname;
 
+io.set('log level', 1); // reduce logging
+
 // connect to the flydb app database
 mongoose.connect(configs.db.url);
 
@@ -207,11 +209,10 @@ exports.processSignUpData = function(req, res) {
                               function(err) {
                                   if (err) {
                                       console.log("==============Error in saving user======"); 
-                                  } else  {
-                                      console.log("================saved user=============");
-                                  }
-                                  console.log(newFlyUser);
-                                  console.log("======================================");
+                                      console.log(newFlyUser); 
+                                      console.log("======================================");                                     
+                                  } 
+
                               });
                           
                           var loadedUser = helpers.loadUser(newFlyUser);
@@ -367,20 +368,15 @@ exports.deleteDoc = function(req, res) {
     User.findOne({userName: req.session.currentUser}
                  , function(err, user) {
                      if (err || !user) {
-                         console.log("Unable to delete doc from " 
-                                     + user.userName + "'s list of documents");
                          response.errors.push("Had problems processing your deletion. Try again.");
                          res.json(response);
                          return;
                      }
                      for (var i = 0; i < user.documentsPriv.length; i++) {
-                         console.log("comparing "+user.documentsPriv[i]._id
-                                     +" with " + docId);
                          if (user.documentsPriv[i]._id.equals(docId)) {
                              docName = user.documentsPriv[i].name;
                              user.documentsPriv.splice(i, 1);
                              
-                             console.log("Removed documentsPriv with documentId: " + docId);
                              break;
                          }
                      }
@@ -391,10 +387,7 @@ exports.deleteDoc = function(req, res) {
                      // change session object to reflect new change in user's documents
                      for (i = 0; i < req.session.userDocuments.length; i++) {        
                          if (String(req.session.userDocuments[i].id) == String(docId)) {
-                             req.session.userDocuments.splice(i,1);
-                             
-                             console.log("Removed userDocument with _id "
-                                         + docId + " from session object");
+                             req.session.userDocuments.splice(i,1);                             
                          }
                      }   
 
@@ -403,22 +396,14 @@ exports.deleteDoc = function(req, res) {
                              // no other user has this document
                              Document.findOne({_id:docId})
                                  .remove(function(err) {
-                                             if (!err) {
-                                                 console.log("Removed document with _id "
-                                                             + docId + " completely from the database");
-                                             }
-                                             else {
+                                             if (err) {
                                                  console.log("Error while deleting document with _id " 
                                                              + docId + " completely from the database");
                                              }
                                              res.json(response);
                                          });
                          } else {
-                             // some other user(s) has access to this document
-                             console.log("Document(docId=" + docId +
-                                         ") not deleted because some other users "
-                                         + "still have access to this document");
-                             
+
                              // then remove the current userName from the the list of users
                              // with share (full) access, if there
                              Document.findOne({_id: docId}
@@ -732,8 +717,6 @@ exports.grantAccess = function(req, res) {
                          
                          user.documentsPriv
                              .forEach(function(item, index) {
-                                          console.log("comparing " + item._id + " with "
-                                                      + req.body.documentId);
                                           if (item._id.equals(req.body.documentId)) {
                                               userHasDoc = true;
                                           }
@@ -779,8 +762,6 @@ exports.grantAccess = function(req, res) {
                              
                              // if userToShare already has the document, upgrade access if possible
                              for (var i = 0; i < user.documentsPriv.length; i++) {
-                                 console.log("comparing " + user.documentsPriv[i]._id + " with "
-                                             + newUserDocument.id);
                                  if (user.documentsPriv[i]._id.equals(newUserDocument.id)
                                      && user.documentsPriv[i].access < req.body.access) {
                                      upgrading = true;
@@ -791,11 +772,10 @@ exports.grantAccess = function(req, res) {
                                      user.documentsPriv[i].access = parseInt(req.body.access);
                                      
                                      user.save(function(err) {
-                                                   if (!err) 
-                                                       console.log("user successfully saved!");
-                                                   else
+                                                   if (err) {
                                                        console.log("error occured while trying "
                                                                    + "to save user");
+                                                   }
                                                });
                                      
                                      // send back message
@@ -830,8 +810,6 @@ exports.grantAccess = function(req, res) {
                              newDocPriv._id = req.body.documentId; 
 
                              for (var i = 0; i < user.documentsPriv.length; i++) {
-                                 console.log("comparing "+user.documentsPriv[i]._id
-                                            +" with " + newDocPriv._id);
                                  if (user.documentsPriv[i]._id.equals(newDocPriv._id)) {
                                      user.documentsPriv.splice(i, 1);
                                      break;
@@ -981,9 +959,6 @@ exports.acceptAccess = function(req, res) {
                          newDocPriv._id = req.body.documentId;
 
                          for (var i = 0; i < user.documentsPriv.length; i++) {
-                             console.log("comparing " + user.documentsPriv[i]._id + " with "
-                                         + newDocPriv._id);
-
                              if (user.documentsPriv[i]._id.equals(newDocPriv._id)) {
                                  user.documentsPriv.splice(i, 1);
                                  break;
@@ -1039,8 +1014,6 @@ exports.reloadSession = function(req, res) {
                          
                          // load userDocuments
                          response.userDocuments = req.session.userDocuments;
-                         console.log("response in reload session=>");
-                         console.log(response);
                          res.json(response);
                      });
     }
@@ -1117,10 +1090,7 @@ exports.compileDoc = function(req, res) {
                                                 res.json(response);
                                                 return;
                                             } else {
-                                                console.log("Successfully saved "
-                                                            + pdfTitle
-                                                            +" in "+configs.pdfs.path);
-                                                
+
                                                 response.infos
                                                     .push("Successfully compiled '"
                                                           + req.body.documentName
@@ -1187,13 +1157,10 @@ exports.deleteMessage = function(req, res) {
                          , access: parseInt(req.body.access)
                          , toUser: req.session.currentUser})
             .remove(function(err) {
-                        if (!err) {
-                            console.log("You just deleted a message");
-                            
-                            res.json(response);
-                        } else {
+                        if (err) {                           
                             console.log("Error while deleting a message");
-                        }
+                        } 
+                        res.json(response);
                     });
     }
 };
