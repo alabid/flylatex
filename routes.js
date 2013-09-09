@@ -99,7 +99,7 @@ exports.preIndex = function(req, res, next) {
                && req.body.password && req.body.password.length > 0) {
         
         // user's not logged in, but wants to log in
-        User.findOne({userName: req.body.username}, function(err, user) {
+        User.findOne({"_id": req.body.username}, function(err, user) {
             if (err) {
                 req.session.currentUser = null;
                 req.session.isLoggedIn = false;
@@ -190,7 +190,7 @@ exports.processSignUpData = function(req, res) {
     if (!isError) {
         // there's no error. Save the new user
         // only if someone else doesn't have his username
-        User.find({userName: newUser.userName}, function(err, users) {
+        User.find({_id : newUser.userName}, function(err, users) {
             if (users.length > 0) {
                 errors["userNameTaken"] = "The username '" + 
                     newUser.userName + "' is already taken";
@@ -291,7 +291,7 @@ exports.createDoc = function(req, res) {
                                                    , req.session.currentUser);
             
             // by default, document privilege for the 
-            // current user is 7 (full access)
+            // current user is 6 (full access)
             var docPriv = new DocPrivilege();
             docPriv._id = newDoc._id;
             docPriv.name = newDoc.name;            
@@ -299,10 +299,9 @@ exports.createDoc = function(req, res) {
             // new user document to send off to front end for display
             var newUserDocument = {};
             
-            User.findOne({"userName": req.session.currentUser}, function(err, user) {
+            User.findOne({"_id": req.session.currentUser}, function(err, user) {
                 if (err || !user) {
-                    response.errors.push("error"
-                                         , "Couldn't find you. Weird.");
+                    response.errors.push("Couldn't find you. Weird.");
                     res.json(response);
                     return;
                 }
@@ -362,7 +361,7 @@ exports.deleteDoc = function(req, res) {
     }
 
     // remove the document from Users collections
-    User.findOne({userName: req.session.currentUser}, function(err, user) {
+    User.findOne({_id: req.session.currentUser}, function(err, user) {
         if (err || !user) {
             response.errors.push("Had problems processing your deletion. Try again.");
             res.json(response);
@@ -465,7 +464,7 @@ exports.shareAccess = function(req, res) {
         response.errors.push("You should share at least 'Read' privilege");
     }
     
-    User.findOne({userName: options.userToShare}, function(err, user) {
+    User.findOne({_id: options.userToShare}, function(err, user) {
         if (err) {
             console.log("An error occured");
         }
@@ -527,7 +526,7 @@ exports.ajaxAutoComplete = function(req, res) {
         , data = {code:200, results:[]};
         
         // query the users collection for usernames
-        User.find({userName: new RegExp(typed)}, function(err, users) {
+        User.find({_id: new RegExp(typed)}, function(err, users) {
             if (!err) {
                 users.forEach(
                     function(item, index) {
@@ -683,7 +682,7 @@ exports.grantAccess = function(req, res) {
         return;
     }
     
-    User.findOne({"userName" : req.body.userToGrant}, function(err, user) {
+    User.findOne({"_id" : req.body.userToGrant}, function(err, user) {
         if (err || !user) {
             response.errors.push("No user '" + req.body.userToGrant 
                                  + "' exists or an error occured "
@@ -709,7 +708,7 @@ exports.grantAccess = function(req, res) {
                 });
             
             var priv = req.body.access
-            , readAccess = false
+                         , readAccess = false
             , writeAccess = false
             , canShare = false;
             
@@ -718,7 +717,7 @@ exports.grantAccess = function(req, res) {
             if (priv == 6) {
                 canShare = true;
                              
-                // give user R, W access
+                // give user R, W, X access
                 helpers.giveUserSharePower(req.body.userToGrant
                                            , req.body.documentId);
             }
@@ -853,7 +852,7 @@ exports.acceptAccess = function(req, res) {
         res.json(response);
     }
     
-    User.findOne({"userName":req.session.currentUser}, function(err, user) {
+    User.findOne({"_id":req.session.currentUser}, function(err, user) {
         // first make sure the user doesn't already have some access to the document
         // in that case, bump up the user's access
         var userHasDoc = false;
@@ -989,7 +988,7 @@ exports.reloadSession = function(req, res) {
         res.json(response);
         return;
     } else if (req.session.currentUser == req.body.document.forUser) {
-        User.findOne({userName: req.session.currentUser}, function(err, user) {
+        User.findOne({_id : req.session.currentUser}, function(err, user) {
             // reload user
             var loadedUser = helpers.loadUser(user);
             for (var key in loadedUser) {

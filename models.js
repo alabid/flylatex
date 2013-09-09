@@ -45,7 +45,8 @@ var Document = new Schema ({
 });
 
 var User = new Schema ({
-    userName: {type: String
+    // _id == User name
+    _id: {type: String
                , index: {unique: true}
               }
     , hashedPassword: {type: String
@@ -144,6 +145,14 @@ User.pre("save", function(next) {
     } else {
         next();
     }
+});
+
+User.virtual("userName").get(function() {
+    return this["_id"];
+});
+
+User.virtual("userName").set(function(userName) {
+    this["_id"] = userName;
 });
 
 /** end of definition of middleware here */
