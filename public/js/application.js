@@ -124,10 +124,10 @@ function DocsManager() {
                                      // Asynchronously download PDF as an ArrayBuffer
                                      PDFJS.getDocument("http://"+document.location.host+response.compiledDocURI)
                                          .then(function(_pdfDoc){
-                                                   data.docOptions.pdfDoc = _pdfDoc;
-                                                   
-                                                   renderPage(data.docOptions.pageNum);
-                                               });
+                                             data.docOptions.pdfDoc = _pdfDoc;
+                                             
+                                             renderPage(data.docOptions.pageNum);
+                                         });
                                  }
                              }
                            });
@@ -178,17 +178,17 @@ function DocsManager() {
         // Using promise to fetch the page
         docOptions.pdfDoc.getPage(num)
             .then(function(page) {
-                      var viewport = page.getViewport(docOptions.scale);
-                      docOptions.canvas.height = viewport.height;
-                      docOptions.canvas.width = viewport.width;
-                      
-                      // Render PDF page into canvas context
-                      var renderContext = {
-                          canvasContext: docOptions.ctx,
-                          viewport: viewport
-                      };
-                      page.render(renderContext);
-                  });
+                var viewport = page.getViewport(docOptions.scale);
+                docOptions.canvas.height = viewport.height;
+                docOptions.canvas.width = viewport.width;
+                
+                // Render PDF page into canvas context
+                var renderContext = {
+                    canvasContext: docOptions.ctx,
+                    viewport: viewport
+                };
+                page.render(renderContext);
+            });
         
         // Update page counters
         document.getElementById("page_num").textContent = docOptions.pageNum;
@@ -291,8 +291,8 @@ function DocsManager() {
         $(domTargets.documentList).find("[data-doc-id="+id+"] button")
             .filter(":disabled")
             .each(function(i, elem) {
-                      privsForDoc.push($(elem).text().toLowerCase());
-                  });
+                privsForDoc.push($(elem).text().toLowerCase());
+            });
         
         // remove any previously displayed request access modals
         $("#request-access").remove();
@@ -304,13 +304,13 @@ function DocsManager() {
                           , write: false };
         
         privsForDoc.forEach(function(item, index){
-                                requestObj[item] = true;
-                            });
+            requestObj[item] = true;
+        });
         
         if (typeof privs.push != "undefined") {
             privs.forEach(function(item, index) {
-                              requestObj[item] = true;    
-                          });
+                requestObj[item] = true;    
+            });
         } else if (typeof privs == "string") {
             requestObj[privs] = true;
         }
@@ -410,36 +410,36 @@ function DocsManager() {
     this.openDocOnLoad = function(onloadDoc) {
         // open sharejs doc in session first
         sharejs.open(onloadDoc.id, "text", function(error, doc) {
-                         if (oldDoc) {
-                             oldDoc.close();
-                         }
-                         currentDoc = doc; // store doc object               
-                         
-                         // compile and render document
-                         // docs_manager.compileAndRender(onloadDoc.id, onloadDoc.name);
-                         
-                         var userDoc = onloadDoc
-                         , writeAccess = userDoc.writeAccess == "true";
-                         
-                         // make editor writeable if user has write permission on document
-                         if (writeAccess) {
-                             editor.setReadOnly(false);
-                         } else {
-                             editor.setReadOnly(true);
-                         }
-                         
-                         // update "last saved" info box
-                         updateLastSavedInfo(jQuery.timeago(new Date(userDoc.lastSaved)));
-                         
-                         // load document text here
-                         if (doc.created) {
-                             doc.insert(0, userDoc.text);
-                         }
-                         
-                         doc.attach_ace(editor);
-                         
-                         oldDoc = doc;       
-                     });      
+            if (oldDoc) {
+                oldDoc.close();
+            }
+            currentDoc = doc; // store doc object               
+            
+            // compile and render document
+            // docs_manager.compileAndRender(onloadDoc.id, onloadDoc.name);
+            
+            var userDoc = onloadDoc
+            , writeAccess = userDoc.writeAccess == "true";
+            
+            // make editor writeable if user has write permission on document
+            if (writeAccess) {
+                editor.setReadOnly(false);
+            } else {
+                editor.setReadOnly(true);
+            }
+            
+            // update "last saved" info box
+            updateLastSavedInfo(jQuery.timeago(new Date(userDoc.lastSaved)));
+            
+            // load document text here
+            if (doc.created) {
+                doc.insert(0, userDoc.text);
+            }
+            
+            doc.attach_ace(editor);
+            
+            oldDoc = doc;       
+        });      
     };
     
     
@@ -625,24 +625,24 @@ function UserMessages() {
                            , priv;
                            response.messages
                                .forEach(function(item, index) {
-                                            // set shareAccess, requestAccess flags
-                                            // some sugar
-                                            item.isRequestAccess = item.messageType == 0;
-                                            item.isShareAccess = item.messageType == 1;
-                                            // temporarily use priv here
-                                            priv = item.access;
-                                            item.readAccess = item.writeAccess = false;
-                                            // de-couple privileges
-                                            if (priv >= 4) {
-                                                priv -= 4;
-                                                item.readAccess = true;
-                                            }
-                                            if (priv >= 2) {
-                                                priv -= 2;
-                                                item.writeAccess = true;
-                                            }
-                                            messagesForTemplate.push(item);
-                                        });
+                                   // set shareAccess, requestAccess flags
+                                   // some sugar
+                                   item.isRequestAccess = item.messageType == 0;
+                                   item.isShareAccess = item.messageType == 1;
+                                   // temporarily use priv here
+                                   priv = item.access;
+                                   item.readAccess = item.writeAccess = false;
+                                   // de-couple privileges
+                                   if (priv >= 4) {
+                                       priv -= 4;
+                                       item.readAccess = true;
+                                   }
+                                   if (priv >= 2) {
+                                       priv -= 2;
+                                       item.writeAccess = true;
+                                   }
+                                   messagesForTemplate.push(item);
+                               });
                            
                            $("#messages-modal").remove();
                            $(domTargets.bodySecondContainer)
@@ -650,7 +650,7 @@ function UserMessages() {
                            $("#messages-modal").modal("show");
                        }
                    }
-               });
+        });
     };
     /*
      * sendMessage -
@@ -668,25 +668,25 @@ function UserMessages() {
         switch (messageType) {
         case 'requestAccess':
             $.ajax({
-                       type: "POST"
-                       , data: {"options":options}
-                       , url: "/requestaccess"
-                       , success: function(response) {
-                           // update alerts
-                           updateAlerts(response);
-                       }
-                   });
+                type: "POST"
+                , data: {"options":options}
+                , url: "/requestaccess"
+                , success: function(response) {
+                    // update alerts
+                    updateAlerts(response);
+                }
+            });
             break;
         case 'shareAccess':
             $.ajax({
-                       type: "POST"
-                       , data: {"options":options}
-                       , url: "/shareaccess"
-                       , success: function(response) {
-                           // update alerts
-                           updateAlerts(response);
-                       }
-                   });
+                type: "POST"
+                , data: {"options":options}
+                , url: "/shareaccess"
+                , success: function(response) {
+                    // update alerts
+                    updateAlerts(response);
+                }
+            });
             break;
         default:
             console.log("It's either I'm doing sth wrong or ya messing with me!");
@@ -702,20 +702,20 @@ function UserMessages() {
      */
     this.grantAccess = function(fromUser, documentId, documentName, access) {
         $.ajax({
-                   type: "POST"
-                   , url: "/grantaccess"
-                   , data: {"userToGrant": fromUser
-                            , "documentId":documentId
-                            , "documentName":documentName
-                            , "access":access}
-                   , success: function(response) {
-                       // update alerts
-                       updateAlerts(response);
-                       
-                       // delete the message
-                       deleteMessage(fromUser, documentId, access);
-                   }
-               });
+            type: "POST"
+            , url: "/grantaccess"
+            , data: {"userToGrant": fromUser
+                     , "documentId":documentId
+                     , "documentName":documentName
+                     , "access":access}
+            , success: function(response) {
+                // update alerts
+                updateAlerts(response);
+                
+                // delete the message
+                deleteMessage(fromUser, documentId, access);
+            }
+        });
     };
     
     /**
@@ -728,31 +728,31 @@ function UserMessages() {
      */
     this.acceptAccess = function(fromUser, documentId, documentName, access) {
         $.ajax({
-                   type: "POST"
-                   , url: "/acceptaccess"
-                   , data: {"acceptFromUser":fromUser,
-                            "documentId":documentId, 
-                            "documentName":documentName, 
-                            "access":access}
-                   , success: function(response) {
-                       // update alerts
-                       updateAlerts(response);
-                       
-                       // delete message
-                       deleteMessage(fromUser, documentId, access);
-                       
-                       if (response.reDisplay) {
-                           $(domTargets.documentList).empty();
-                           
-                           // redisplay the entire list of documents
-                           response.userDocuments
-                               .forEach(function(item, index) {
-                                            $(domTargets.documentList)
-                                                .append(domTargets.singleDocEntry(item));
-                                        });
-                       }
-                   }
-               });
+            type: "POST"
+            , url: "/acceptaccess"
+            , data: {"acceptFromUser":fromUser,
+                     "documentId":documentId, 
+                     "documentName":documentName, 
+                     "access":access}
+            , success: function(response) {
+                // update alerts
+                updateAlerts(response);
+                
+                // delete message
+                deleteMessage(fromUser, documentId, access);
+                
+                if (response.reDisplay) {
+                    $(domTargets.documentList).empty();
+                    
+                    // redisplay the entire list of documents
+                    response.userDocuments
+                        .forEach(function(item, index) {
+                            $(domTargets.documentList)
+                                .append(domTargets.singleDocEntry(item));
+                        });
+                }
+            }
+        });
     };
     
     /**
@@ -775,16 +775,16 @@ function UserMessages() {
      */
     var deleteMessage = function(fromUser, documentId, access) {
         $.ajax({
-                   type: "POST"
-                   , url: "/deletemessage"
-                   , data: {"fromUser":fromUser
-                            , "documentId":documentId
-                            , "access":access}
-                   , success: function(response) {
-                       // update alerts
-                       updateAlerts(response);
-                   }
-               });
+            type: "POST"
+            , url: "/deletemessage"
+            , data: {"fromUser":fromUser
+                     , "documentId":documentId
+                     , "access":access}
+            , success: function(response) {
+                // update alerts
+                updateAlerts(response);
+            }
+        });
     };
 };
 
@@ -888,27 +888,25 @@ var updateAlerts = function(response) {
 
 // ================ Handle bars helper functions ==========
 // listalert handler
-Handlebars.registerHelper('listalert'
-                          , function(items, options) {
-                              var out = "<ul>";
-                              
-                              for (var i = 0, l=items.length; i<l;i++) {
-                                  out = out + "<li>" + items[i] + "</li>";
-                              }
-                              
-                              return out + "</ul>";
-                          });
+Handlebars.registerHelper('listalert', function(items, options) {
+    var out = "<ul>";
+    
+    for (var i = 0, l=items.length; i<l;i++) {
+        out = out + "<li>" + items[i] + "</li>";
+    }
+    
+    return out + "</ul>";
+});
 
 // displaymessages handler
-Handlebars.registerHelper('displaymessages'
-                          , function(items, options) {
-                              var out = "<ul class='nav nav-list'>\n<li class='nav-header'>Messages</li>";
-                              
-                              for (var i = 0, l=items.length; i<l;i++) {
-                                  out = out + '<li onclick="$(this).addClass(\'active\').siblings(\'li\').removeClass(\'active\');">' + options.fn(items[i]) + "</li>";
-                              }
-                              return out + "</ul>";
-                          });
+Handlebars.registerHelper('displaymessages', function(items, options) {
+    var out = "<ul class='nav nav-list'>\n<li class='nav-header'>Messages</li>";
+    
+    for (var i = 0, l=items.length; i<l;i++) {
+        out = out + '<li onclick="$(this).addClass(\'active\').siblings(\'li\').removeClass(\'active\');">' + options.fn(items[i]) + "</li>";
+    }
+    return out + "</ul>";
+});
 
 /**
  * getAutoCompleteData ->
@@ -934,34 +932,34 @@ var getAutoCompleteData = function(ev) {
             
             //Do data request. Insert your own API logic here.
             $.ajax({
-                       type: "GET"
-                       , url: "/autocomplete"
-                       , data: {
-                           word: $(this).val()
-                           , purpose: $(this).attr('data-purpose')
-                       }
-                       , success: function(data) {
-                           
-                           //set this to true when your callback executes
-                           self.data('active',true);
-                           
-                           //Filter out your own parameters. Populate them into an array, since this is what typeahead's source requires
-                           var arr = [],
-                           i=data.results.length;
-                           while(i--){
-                               arr[i] = data.results[i];
-                           }
-                           
-                           //set your results into the typehead's source 
-                           self.data('typeahead').source = arr;
-                           
-                           //trigger keyup on the typeahead to make it search
-                           self.trigger('keyup');
-                           
-                           //All done, set to false to prepare for the next remote query.
-                           self.data('active', false);
-                       }       
-                   });     
+                type: "GET"
+                , url: "/autocomplete"
+                , data: {
+                    word: $(this).val()
+                    , purpose: $(this).attr('data-purpose')
+                }
+                , success: function(data) {
+                    
+                    //set this to true when your callback executes
+                    self.data('active',true);
+                    
+                    //Filter out your own parameters. Populate them into an array, since this is what typeahead's source requires
+                    var arr = [],
+                        i=data.results.length;
+                    while(i--){
+                        arr[i] = data.results[i];
+                    }
+                    
+                    //set your results into the typehead's source 
+                    self.data('typeahead').source = arr;
+                    
+                    //trigger keyup on the typeahead to make it search
+                    self.trigger('keyup');
+                    
+                    //All done, set to false to prepare for the next remote query.
+                    self.data('active', false);
+                }       
+            });     
         }
     }
 };

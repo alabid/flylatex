@@ -42,36 +42,35 @@ var loadUser = function(user) {
     var userDocument = {}
     , priv;
     
-    user.documentsPriv.forEach(
-        function(item, i) {
-            userDocument.id = item._id;
-            userDocument.name = item.name;
-            // set defaults here
-            userDocument.readAccess = false;
-            userDocument.writeAccess = false;
-            userDocument.canShare = false;
-            
-            // set privileges here
-            priv = item.access;
-            
-            if (priv >= 4) {
-                userDocument.readAccess = true;
-                priv -= 4;
-            }
-            if (priv >= 2) {
-                userDocument.writeAccess = true;
-                priv -= 2;
-            }
-
-            // if user has R, W access, he can share the document
-            // else he cannot
-            if (item.access == 6) {
-                userDocument.canShare = true;
-            }
-            
-            obj.userDocuments.push(userDocument);
-            userDocument = {};
-        });
+    user.documentsPriv.forEach(function(item, i) {
+        userDocument.id = item._id;
+        userDocument.name = item.name;
+        // set defaults here
+        userDocument.readAccess = false;
+        userDocument.writeAccess = false;
+        userDocument.canShare = false;
+        
+        // set privileges here
+        priv = item.access;
+        
+        if (priv >= 4) {
+            userDocument.readAccess = true;
+            priv -= 4;
+        }
+        if (priv >= 2) {
+            userDocument.writeAccess = true;
+            priv -= 2;
+        }
+        
+        // if user has R, W access, he can share the document
+        // else he cannot
+        if (item.access == 6) {
+            userDocument.canShare = true;
+        }
+        
+        obj.userDocuments.push(userDocument);
+        userDocument = {};
+    });
     
     return obj;
 };
@@ -129,7 +128,7 @@ var createNewDocument = function(docName, currentUser) {
                      , documentType: 0 // latex document
                     };
     
-    for (key in newDocObj) {
+    for (var key in newDocObj) {
         newDoc[key] = newDocObj[key];
     }
     // save the document
@@ -148,21 +147,20 @@ var createNewDocument = function(docName, currentUser) {
  * @param documentId -> document id of document concerned
  */
 var giveUserSharePower = function(fromUser, documentId) {
-    Document.findOne({_id: documentId}
-                     , function(err, doc) {
-                         if (!err) {
-                             if (doc.usersWithShareAccess.indexOf(fromUser) == -1) {
-                                 doc.usersWithShareAccess.push(fromUser);
-                                 
-                                 // save doc
-                                 doc.save();
-                             }
-                         } else {
-                             console.log("An error occured while trying to note " 
-                                         + "in document model that "
-                                         + req.body.fromUser + " has full access to the doc");  
-                         }
-                     });
+    Document.findOne({_id: documentId}, function(err, doc) {
+        if (!err) {
+            if (doc.usersWithShareAccess.indexOf(fromUser) == -1) {
+                doc.usersWithShareAccess.push(fromUser);
+                
+                // save doc
+                doc.save();
+            }
+        } else {
+            console.log("An error occured while trying to note " 
+                        + "in document model that "
+                        + req.body.fromUser + " has full access to the doc");  
+        }
+    });
 };
 
 

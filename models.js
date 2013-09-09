@@ -17,9 +17,8 @@ var crypto = require("crypto")
 , fs = require("fs-extra");
 
 var DocPrivilege = new Schema ({
-    access: {type: Number
-         , default: 6
-        }
+    access: { type: Number
+             , default: 6 }
     /*
      * 6 - read and write
      * 4 - read only
@@ -35,9 +34,8 @@ var Document = new Schema ({
     name: String
     , data: Buffer
     , lastModified: Date
-    , createdAt: {type: Date
-          , default: new Date()
-         }
+    , createdAt: { type: Date
+                  , default: new Date() }
     /* 
      * latex source file -> 0
      * other types to come...
@@ -48,24 +46,24 @@ var Document = new Schema ({
 
 var User = new Schema ({
     userName: {type: String
-           , index: {unique: true}
-          }
-    , hashedPassword: {type: String
                , index: {unique: true}
               }
+    , hashedPassword: {type: String
+                       , index: {unique: true}
+                      }
     , salt: String
     , firstName: String
     , lastName: String
     , email: {type: String}
     , githubId: {type: String
-         , default: ""
-        }
+                 , default: ""
+                }
     , twitterId: {type: String
-          , default: ""
-         }
+                  , default: ""
+                 }
     , memberSince: {type: Date
-            , default: new Date()
-           }
+                    , default: new Date()
+                   }
     , documentsPriv: [DocPrivilege] // list of DocPrivilege Objects
 });
 
@@ -82,8 +80,8 @@ var Message = new Schema ({
     , documentName: String
     , access: Number // as in DocPrivilege model
     , timeSent: {type: Date
-         , default: new Date()
-        }
+                 , default: new Date()
+                }
 });
 
 /*
@@ -130,7 +128,7 @@ User.method("makeSalt", function() {
 
 User.method("encryptPassword", function(password) {
     return crypto.createHmac("sha1", this.salt)
-                    .update(password).digest("hex");
+        .update(password).digest("hex");
 });
 
 /** end of virutal methods def */

@@ -17,7 +17,9 @@ exports.addNewDocument = function(req, res) {
         
         req.session.userDocuments.push(document);
         
-        response.infos.push(document.fromUser + " just added " + document.name + " to your list of documents");
+        response.infos.push("'" + document.fromUser + "'" 
+                            + " just added '" + document.name + "'"
+                            + " to your list of documents");
         
         res.json(response);
     }    
