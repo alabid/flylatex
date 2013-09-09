@@ -46,18 +46,16 @@ var Document = new Schema ({
 
 var User = new Schema ({
     // _id == User name
-    _id: {type: String
-               , index: {unique: true}
-              }
-    , hashedPassword: {type: String
-                       , index: {unique: true}
+    _id: { type: String }
+    , hashedPassword: { type: String
+                       , index: {unique: true }
                       }
     , salt: String
     , firstName: String
     , lastName: String
-    , email: {type: String}
-    , githubId: {type: String
-                 , default: ""
+    , email: { type: String }
+    , githubId: { type: String
+                  , default: ""
                 }
     , twitterId: {type: String
                   , default: ""
@@ -80,7 +78,7 @@ var Message = new Schema ({
     , documentId: ObjectId
     , documentName: String
     , access: Number // as in DocPrivilege model
-    , timeSent: {type: Date
+    , timeSent: { type: Date
                  , default: new Date()
                 }
 });
