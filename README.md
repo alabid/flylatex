@@ -20,6 +20,8 @@ FlyLatex gives you:
 
 * An Open Source product that's easy to Customize
 
+* Option to use images, additional packages (like .sty files) by specifying `configs.includes.path`
+
 It's a free and open-source version of [ShareLatex](http://sharelatex.com).
 Woot!
 
@@ -110,7 +112,7 @@ Daniel Alabi
 
 Version
 -------
-0.9.1
+1.0
 
 MIT Open Source License
 -----------------------
