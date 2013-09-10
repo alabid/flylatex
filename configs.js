@@ -10,6 +10,10 @@ var config = {
     }, docs: {
         // maximum number of documents per user
         MAX_NUM_PER_USER : 20
+    }, includes: {
+	    // absolute path of includes
+	    // defaults to "texpackages" directory in "flylatex" repo
+	    path : ""
     }
 };
 

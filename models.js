@@ -83,6 +83,17 @@ var Message = new Schema ({
                 }
 });
 
+
+/*
+ * specify directory for includes
+ */
+var includespath = configs.includes.path;
+if (includespath == undefined || includespath.length == 0) {
+    includespath = __dirname + "/texpackages/";
+} else {
+    includespath = (includespath[-1] == "/" ? includespath : includespath + "/");
+}
+
 /*
  * Create the new directory to store compiled pdfs
  */
@@ -95,12 +106,18 @@ if (pdfspath == undefined || pdfspath.length == 0) {
 
 fs.mkdirp(pdfspath, function(err) {
     if (err) {
-        console.log("An error occured while creating directory: "
-                    , pdfspath);
+	    console.log("An error occured while creating directory: "
+		            , pdfspath);
     } 
 });
-
+fs.mkdirp(includespath, function(err) {
+    if (err) {
+	    console.log("An error occured while creating directory: "
+		            , includespath);
+    } 
+});
 configs.pdfs.path = pdfspath;
+configs.includes.path = includespath;
 
 /*
  * virtual methods here

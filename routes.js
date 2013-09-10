@@ -1091,8 +1091,22 @@ exports.compileDoc = function(req, res) {
                 }
                 process.chdir(dirPath);
                 
-                exec("pdflatex -interaction=nonstopmode "+ inputPath +" > /dev/null 2>&1"
-                     , afterCompile);
+                var copyPackages = ["cp -r"
+                                   , configs.includes.path
+                                   , dirPath + "/"].join(" ");
+
+                exec(copyPackages, function(err) {
+                    if (err) {
+                        response.errors.push("Error copying additional "
+                                             + "packages/images to use during compilation");
+                        res.json(response);
+                        return;
+                    }
+                    
+                    // compile the document (or at least try) 
+                    exec("pdflatex -interaction=nonstopmode "+ inputPath +" > /dev/null 2>&1"
+                         , afterCompile);
+                });
             });
         };
     };  

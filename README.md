@@ -44,7 +44,7 @@ To install FlyLatex, first clone the repository: `git clone https://github.com/a
 `cd` into the directory `flylatex`. Open the file `configs.js` with your favorite
 editor and edit the file to reflect your storage setup and your database
 setup. Use `configs.pdfs.path` to specify where you want to store
-your output pdfs in. 
+your output pdfs in. Use `configs.includes.path` to specify what directory your TeX includes/packages/images are stored, for use during compilation of any LaTeX document.
 
     var config = {
         port: 3001
@@ -59,7 +59,11 @@ your output pdfs in.
         }, docs: {
           // maximum number of documents per user
           MAX_NUM_PER_USER : 20
-        }
+        }, includes: {
+          // specify directory (absolute path) containing latex includes
+          // defaults to "texpackages" directory in "flylatex" repo
+          path: ""
+        }  
     };
 
 Then run the command `npm install -d` to install all the dependencies for the
