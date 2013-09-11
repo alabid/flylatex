@@ -76,9 +76,7 @@ function DocsManager() {
     this.compileAndRender = function(documentId, documentName) {
         // first try to save the current document being displayed
         $.ajax({type: "POST"
-                , data: {"documentId" : documentId
-                         , "documentName" : documentName
-                         , "documentText": currentDoc.getText()}
+                , data: {"documentId" : documentId}
                 , url: "/savedoc"
                 , success: function(response) {
                     // update alerts
@@ -499,9 +497,7 @@ function DocsManager() {
     this.saveDoc = function(docId, docName) {
         // save the document
         $.ajax({type: "POST"
-                , data: {"documentId" : docId
-                         , "documentName" : docName
-                         , "documentText": currentDoc.getText()}
+                , data: {"documentId" : docId}
                 , url: "/savedoc"
                 , success: function(response) {
                     // update alerts
