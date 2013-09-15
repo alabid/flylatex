@@ -1048,6 +1048,7 @@ exports.compileDoc = function(req, res) {
                 // store the logs for the user here
                 fs.readFile(path.join(dirPath, documentId+".log"), function(err, data){
                     if (err) {
+			console.log(err);
                         response.errors.push("Error while trying to read logs.");
                         res.json(response);
                         return;
