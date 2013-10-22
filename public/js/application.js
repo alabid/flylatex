@@ -40,7 +40,11 @@ function DocsManager() {
     };
     
     // ==========================================
-    
+
+    this.downloadPDFDoc = function(documentId, documentName) {
+        window.open('/servepdf/'+documentId);
+    };
+
     /**
      * sharePDFDoc ->
      * @param documentId : id of document to share
