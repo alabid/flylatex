@@ -89,3 +89,7 @@ div.request-access-box form button, div.share-access-box form button {
     font-size: 18px;
     text-decoration: underline;
 }
+
+.list-of-documents > .nav-header {
+    margin-bottom: 15px;
+}
