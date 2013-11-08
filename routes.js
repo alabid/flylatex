@@ -1091,8 +1091,8 @@ exports.compileDoc = function(req, res) {
                 }
                 process.chdir(dirPath);
                 
-                var copyPackages = ["cp -r"
-                                   , configs.includes.path
+                var copyPackages = ["cp -R"
+                                   , configs.includes.path + "*"
                                    , dirPath + "/"].join(" ");
 
                 exec(copyPackages, function(err) {
