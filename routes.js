@@ -1092,7 +1092,7 @@ exports.compileDoc = function(req, res) {
                 process.chdir(dirPath);
                 
                 var copyPackages = ["cp -R"
-                                   , configs.includes.path + "*"
+                                   , configs.includes.path
                                    , dirPath + "/"].join(" ");
 
                 exec(copyPackages, function(err) {
