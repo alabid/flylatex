@@ -21,8 +21,21 @@ app.configure(function(){
     app.use(express.bodyParser());
     app.use(express.methodOverride());
     app.use(express.cookieParser());
+
+    // generate 36-char random hex string as secret
+    var secret = "", rand;
+    for (var i = 0; i < 36; i++) {
+        rand = Math.floor(Math.random() * 15);
+        if (rand < 10) {
+            // for 0-9
+            secret += String.fromCharCode(48 + rand);
+        } else {
+            // for a-f
+            secret += String.fromCharCode(97 + (rand-10));
+        }
+    }
     app.use(express.session({
-        secret: "788e6139b25d14de5eecc7fc14bd65529218e8cc",
+        secret: secret,
         store: new MongoStore({
             db: "user-auth"
         })
