@@ -365,23 +365,24 @@ function DocsManager() {
      * shrink editor and expand compiler view
      * @param jButton : jQuery object of button
      */
-    this.showCompilerView = function(jButton) {
+    this.showCompilerView = function(jButton, documentId, documentName) {
         // hide compiler text
         jButton.text("Hide PDF View")
-            .attr("onclick", "docs_manager.hideCompilerView($(this));");
+            .attr("onclick", "docs_manager.hideCompilerView($(this), '" + documentId + "', '" + documentName + "');");
         $("#editor, #header").css("width", "600px");
         // show compiler view
         $('.compiler-view').slideLeftShow();
+        this.compileAndRender(documentId, documentName);
     };
     
     /**
      * hideCompilerView ->
      * expand editor and collapse compiler view
      */
-    this.hideCompilerView = function(jButton) {
+    this.hideCompilerView = function(jButton, documentId, documentName) {
         // show compiler text
         jButton.text("Show PDF View")
-            .attr("onclick", "docs_manager.showCompilerView($(this));");
+            .attr("onclick", "docs_manager.showCompilerView($(this), '" + documentId + "', '" + documentName + "');");
         $("#editor, #header").css("width", "1200px");
         // hide compiler view
         $('.compiler-view').slideRightHide();
