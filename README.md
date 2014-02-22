@@ -22,8 +22,6 @@ FlyLatex gives you:
 
 * Option to use images, additional packages (like .sty files) by specifying `configs.includes.path`
 
-It's a free and open-source version of [ShareLatex](http://sharelatex.com).
-Woot!
 
 Screen Shots of the Internals of the FlyLatex application
 ---------------------------------------------------------
