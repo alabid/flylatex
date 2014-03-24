@@ -1,10 +1,15 @@
 {
-    "name": "fly-latex"
-  , "version": "0.9.1"
-  , "dependencies": {
+   "author": "Daniel Alabi"
+   , "name": "flylatex"
+   , "description" : "Open-source LaTeX collaborative environment"
+   , "version": "0.9.1"
+   , "repository" : {
+        "url" : "http://github.com/alabid/flylatex"
+   }  
+   , "dependencies": {
       "express" : "2.5.x"
       , "mongoose" : "2.6.x"
-      , "share" : "0.5.x"
+      , "share" : "0.6.x"
       , "socket.io" : "0.9.x"
       , "temp" : "0.4.x"
       ,"connect-mongo" : "0.1.x"
