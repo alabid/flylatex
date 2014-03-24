@@ -111,8 +111,8 @@ function DocsManager() {
                                      isError = true;
                                  }
                                  
-                                 // PDFJS.disableWorker = true;
-                                 PDFJS.workerSrc = "/js/pdf.js";
+                                 PDFJS.disableWorker = true;
+                                 // PDFJS.workerSrc = "/js/pdf.js";
                                  if (!isError) {
                                      data.docOptions = {
                                          pdfDoc : null
