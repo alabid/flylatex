@@ -26,7 +26,7 @@ FlyLatex gives you:
 Screen Shots of the Internals of the FlyLatex application
 ---------------------------------------------------------
 
-Check it out [here](http://blog.alabidan.me/?p=171)
+Check it out [here](http://alabidan.wordpress.com/2012/07/31/flylatex-a-real-time-collaborative-environment-some-screen-shots-of-the-app/)
 
 Setup
 -----
