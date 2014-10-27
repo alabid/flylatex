@@ -708,7 +708,7 @@ exports.grantAccess = function(req, res) {
                 });
             
             var priv = req.body.access
-                         , readAccess = false
+            , readAccess = false
             , writeAccess = false
             , canShare = false;
             
