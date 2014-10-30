@@ -2,7 +2,7 @@
    "author": "Daniel Alabi"
    , "name": "flylatex"
    , "description" : "Open-source LaTeX collaborative environment"
-   , "version": "1.0"
+   , "version": "1.0.0"
    , "repository" : {
         "url" : "http://github.com/alabid/flylatex"
    }  
