@@ -178,7 +178,9 @@ User.virtual("userName").set(function(userName) {
 // ii) Document
 // iii) DocPrivilege
 // iv) Message
-mongoose.model("User", User);
-mongoose.model("Document", Document);
-mongoose.model("DocPrivilege", DocPrivilege);
-mongoose.model("Message", Message);
+module.exports = function() {
+    mongoose.model("User", User);
+    mongoose.model("Document", Document);
+    mongoose.model("DocPrivilege", DocPrivilege);
+    mongoose.model("Message", Message);
+};

@@ -24,7 +24,7 @@ io.set('log level', 1); // reduce logging
 mongoose.connect(configs.db.url);
 
 // import the models
-require("./models"); 
+require("./models")(); 
 var User = mongoose.model("User")
 , Document = mongoose.model("Document")
 , DocPrivilege = mongoose.model("DocPrivilege")

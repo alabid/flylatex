@@ -8,7 +8,7 @@
    }  
    , "dependencies": {
       "express" : "2.5.x"
-      , "mongoose" : "2.6.x"
+      , "mongoose" : "3.8.x"
       , "share" : "0.6.x"
       , "socket.io" : "0.9.x"
       , "temp" : "0.4.x"
