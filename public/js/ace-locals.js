@@ -15,8 +15,8 @@ editor.getSession().setMode(new LatexMode());
 editor.setTheme("ace/theme/idle_fingers");
 
 var defaultText =   "==> You haven't loaded any document yet. "
-                  + "\nYou should click on the document you want to load."
-                  + "\nOr you should create a new document if you have none yet";
+  + "\nYou should click on the document you want to load."
+  + "\nOr you should create a new document if you have none yet";
 editor.setValue(defaultText);
 // ============ End of Ace editor configurations here =========
 

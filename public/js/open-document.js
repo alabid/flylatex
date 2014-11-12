@@ -1,7 +1,7 @@
 jQuery.fn.extend({
   slideRightShow: function() {
     return this.each(function() {
-        $(this).show('slide', {direction: 'right'}, 1000);
+      $(this).show('slide', {direction: 'right'}, 1000);
     });
   },
   slideLeftHide: function() {
@@ -22,6 +22,6 @@ jQuery.fn.extend({
 });
 
 $(document).ready(function() {
-    // open the document on load
-    docs_manager.openDocOnLoad(onloadDoc);
+  // open the document on load
+  docs_manager.openDocOnLoad(onloadDoc);
 });
