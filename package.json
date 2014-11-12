@@ -1,19 +1,19 @@
 {
-   "author": "Daniel Alabi"
-   , "name": "flylatex"
-   , "description" : "Open-source LaTeX collaborative environment"
-   , "version": "1.0.0"
-   , "repository" : {
-        "url" : "http://github.com/alabid/flylatex"
-   }  
-   , "dependencies": {
-      "express" : "2.5.x"
-      , "mongoose" : "3.8.x"
-      , "share" : "0.6.x"
-      , "socket.io" : "0.9.x"
-      , "temp" : "0.4.x"
-      ,"connect-mongo" : "0.1.x"
-      , "ejs" : "0.8.x"
-      , "fs-extra" : "0.x.x"
+  "author": "Daniel Alabi"
+  , "name": "flylatex"
+  , "description" : "Open-source LaTeX collaborative environment"
+  , "version": "1.0.0"
+  , "repository" : {
+    "url" : "http://github.com/alabid/flylatex"
+  }
+  , "dependencies": {
+    "express" : "2.5.x"
+    , "mongoose" : "3.8.x"
+    , "share" : "0.6.x"
+    , "socket.io" : "0.9.x"
+    , "temp" : "0.4.x"
+    ,"connect-mongo" : "0.1.x"
+    , "ejs" : "0.8.x"
+    , "fs-extra" : "0.x.x"
   }
 }
