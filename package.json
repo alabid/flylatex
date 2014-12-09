@@ -12,7 +12,7 @@
     , "share" : "0.6.x"
     , "socket.io" : "0.9.x"
     , "temp" : "0.8.x"
-    ,"connect-mongo" : "0.1.x"
+    ,"connect-mongo" : "0.4.x"
     , "ejs" : "1.x"
     , "fs-extra" : "0.12.x"
   }
