@@ -1,6 +1,8 @@
 FlyLatex
 ========
 
+**This project is no longer being maintained**
+
 FlyLatex is a real-time collaborative environment for LaTeX built in nodejs.
 It includes a beautiful LaTeX ACE Editor and a PDF renderer. 
 
